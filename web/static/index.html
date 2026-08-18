@@ -137,6 +137,44 @@
     font-size: 12px; font-family: var(--mono);
   }
   .err { color: var(--alert); font-family: var(--mono); font-size: 13px; }
+
+  .ask { display: flex; gap: 9px; margin-bottom: 10px; }
+  .ask input {
+    flex: 1; background: var(--panel); border: 1px solid var(--line); border-radius: 3px;
+    color: var(--ink); padding: 11px 14px; font-family: var(--sans); font-size: 14.5px;
+  }
+  .ask input:focus { outline: none; border-color: var(--accent-dim); }
+  .ask input::placeholder { color: var(--ink-faint); }
+  .ask button {
+    background: var(--accent); color: #17130a; border: 0; border-radius: 3px;
+    padding: 0 22px; font-size: 13px; font-weight: 600; cursor: pointer;
+    letter-spacing: .06em; text-transform: uppercase; font-family: var(--sans);
+  }
+  .ask button:disabled { opacity: .45; cursor: default; }
+
+  .examples { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 14px; }
+  .examples button {
+    background: transparent; border: 1px solid var(--line); border-radius: 999px;
+    color: var(--ink-dim); font-size: 12px; padding: 4px 12px; cursor: pointer;
+    font-family: var(--sans);
+  }
+  .examples button:hover { border-color: var(--accent-dim); color: var(--ink); }
+
+  .answer {
+    background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+    border-radius: 3px; padding: 15px 18px;
+  }
+  .answer .text { font-size: 15px; white-space: pre-wrap; line-height: 1.6; }
+  .answer .sql {
+    margin-top: 13px; padding-top: 12px; border-top: 1px solid #212429;
+    font-family: var(--mono); font-size: 11.5px; color: var(--ink-faint);
+  }
+  .answer .sql div { margin-bottom: 4px; overflow-x: auto; white-space: pre; }
+  .answer .sql .cap {
+    text-transform: uppercase; letter-spacing: .1em; color: var(--ink-dim);
+    margin-bottom: 7px; font-size: 10.5px;
+  }
+  .thinking { color: var(--ink-dim); font-family: var(--mono); font-size: 13px; padding: 14px 0; }
 </style>
 </head>
 <body>
@@ -156,6 +194,22 @@
       differs.
     </p>
     <div class="findings" id="findings"></div>
+  </section>
+
+  <section id="ask-section" hidden>
+    <h2>Ask the shoot</h2>
+    <p class="sub">
+      Plain English. The agent inspects the schema, writes its own SQL against ClickHouse
+      through the MCP server, and reads the rows back. Every statement it chose to run is
+      shown with the answer.
+    </p>
+    <div class="ask">
+      <input id="ask-input" type="text" autocomplete="off"
+             placeholder="which takes is the smartphone missing from?">
+      <button id="ask-go">Ask</button>
+    </div>
+    <div class="examples" id="examples"></div>
+    <div id="answer"></div>
   </section>
 
   <section>
@@ -296,6 +350,65 @@ function renderTakes(takes) {
   }
 }
 
+const EXAMPLES = [
+  "which takes is the smartphone missing from?",
+  "where is the coffee mug in each take?",
+  "what changed between take 3 and take 4?",
+  "which objects were never in the same place twice?",
+];
+
+let currentScene = null;
+
+async function runAsk(question) {
+  const box = $("answer");
+  const btn = $("ask-go");
+  $("ask-input").value = question;
+  btn.disabled = true;
+  box.innerHTML = '<div class="thinking">Inspecting the schema and writing SQL...</div>';
+  try {
+    const res = await fetch("/api/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question, scene_id: currentScene }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
+
+    const n = el("div", "answer");
+    n.appendChild(el("div", "text", esc(data.answer)));
+    if (data.queries?.length) {
+      const sql = el("div", "sql");
+      sql.appendChild(el("div", "cap",
+        `${data.queries.length} statement${data.queries.length > 1 ? "s" : ""} the agent chose to run`));
+      data.queries.forEach(q => sql.appendChild(el("div", null, esc(q.replace(/\s+/g, " ")))));
+      n.appendChild(sql);
+    }
+    box.innerHTML = "";
+    box.appendChild(n);
+  } catch (err) {
+    box.innerHTML = `<div class="err">${esc(err.message)}</div>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function setupAsk() {
+  const ex = $("examples");
+  EXAMPLES.forEach(q => {
+    const b = el("button", null, esc(q));
+    b.onclick = () => runAsk(q);
+    ex.appendChild(b);
+  });
+  $("ask-go").onclick = () => {
+    const v = $("ask-input").value.trim();
+    if (v) runAsk(v);
+  };
+  $("ask-input").addEventListener("keydown", e => {
+    if (e.key === "Enter") $("ask-go").click();
+  });
+  $("ask-section").hidden = false;
+}
+
 async function boot() {
   try {
     const scenes = await api("/api/scenes");
@@ -307,6 +420,13 @@ async function boot() {
     // Richest scene first: a judge landing cold should see the fullest example.
     scenes.sort((a, b) => b.observation_count - a.observation_count);
     const scene = scenes[0].scene_id;
+    currentScene = scene;
+
+    // Only offer the question box if this deployment can actually answer. A control that
+    // errors on click is worse than one that is not there.
+    api("/api/capabilities")
+      .then(c => { if (c.ask) setupAsk(); })
+      .catch(() => {});
 
     const [takes, continuity, entities, health] = await Promise.all([
       api(`/api/scenes/${scene}/takes`),

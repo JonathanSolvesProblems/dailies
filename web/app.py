@@ -24,8 +24,12 @@ from fastapi.staticfiles import StaticFiles
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+from pydantic import BaseModel  # noqa: E402
+
 from pipeline.compare import compare  # noqa: E402
-from pipeline.store import JsonStore, to_dict  # noqa: E402
+from pipeline.store import JsonStore, load_env, to_dict  # noqa: E402
+
+load_env()
 
 STATIC = Path(__file__).resolve().parent / "static"
 OUT_DIR = Path(os.environ.get("DAILIES_OUT", ROOT / "out"))
@@ -145,6 +149,47 @@ def get_entities(scene_id: str):
             "via": obs.via,
         }
     return sorted(entities.values(), key=lambda e: e["entity"])
+
+
+class Question(BaseModel):
+    question: str
+    scene_id: str | None = None
+
+
+@app.post("/api/ask")
+async def ask_question(q: Question):
+    """Natural language in, answer plus the SQL the agent chose, out.
+
+    The queries come back with the answer on purpose. A continuity note that cannot be
+    checked is not evidence, and anyone technical will want to see what was actually run
+    before they believe a claim about their own shoot.
+    """
+    if not q.question.strip():
+        raise HTTPException(status_code=400, detail="Empty question")
+
+    # Imported here so the rest of the app starts and serves with no ClickHouse, no MCP
+    # server and no API key present.
+    from pipeline.ask import ask_async
+
+    try:
+        result = await ask_async(q.question.strip(), q.scene_id)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}") from exc
+
+    return result.to_dict()
+
+
+@app.get("/api/capabilities")
+def capabilities():
+    """What this deployment can actually do, so the UI never offers a dead control."""
+    return {
+        "ask": bool(
+            (os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY"))
+            and os.environ.get("CLICKHOUSE_HOST")
+        )
+    }
 
 
 @app.get("/")
