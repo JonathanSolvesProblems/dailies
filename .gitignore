@@ -1,0 +1,42 @@
+# Secrets. Never commit.
+.env
+.env.*
+!.env.example
+*.key
+local.properties
+
+# Source footage. Personal video of a private home, its interior and the street outside,
+# plus the wearer's face. This repo is public. None of it belongs here, and it is 3.7 GB
+# besides, well past GitHub's 100 MB per-file ceiling.
+footage/
+
+# Extracted frames from that footage, same reasons.
+out/
+
+# Locally generated sample clips.
+testdata/
+
+# Internal planning notes, not a deliverable.
+DEMO_SCRIPT.md
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Belt and braces: no media of any kind gets committed by accident.
+*.mp4
+*.mov
+*.mkv
+*.jpg
+*.jpeg
+*.png
+*.heic
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
