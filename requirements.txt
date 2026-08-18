@@ -1,6 +1,10 @@
 # Google Cloud AI SDK. The only model provider used, and the only one permitted.
 google-genai>=2.18.0
 
+# Web app: the hosted surface judges test.
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+
 # Also required at runtime:
 #   ffmpeg and ffprobe on PATH  (frame sampling, https://ffmpeg.org/download.html)
 #   GOOGLE_API_KEY in the environment  (https://aistudio.google.com/apikey)

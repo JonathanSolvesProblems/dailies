@@ -16,8 +16,9 @@ out/
 # Locally generated sample clips.
 testdata/
 
-# Internal planning notes, not a deliverable.
+# Internal planning notes, not deliverables.
 DEMO_SCRIPT.md
+SUBMISSION_CHECKLIST.md
 
 # Python
 .venv/

@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dailies</title>
+<style>
+  /* Visual language borrowed from the room this tool belongs in: a clapper slate and a
+     lined script. Near-black like a monitor in a dark edit bay, chalk-white lettering,
+     one amber accent for the thing that needs a human decision. Data is monospaced
+     because a facing page is a grid, and grids are read by column. */
+  :root {
+    --bg: #0d0e10;
+    --panel: #16181c;
+    --panel-2: #1c1f24;
+    --line: #2a2e35;
+    --ink: #e8e6e1;
+    --ink-dim: #8b8f98;
+    --ink-faint: #5a5f68;
+    --accent: #e8a33d;
+    --accent-dim: #7a5620;
+    --alert: #e05c4b;
+    --ok: #4fa87a;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); }
+
+  /* Slate-style header: the diagonal stripes of a clapperboard, abstracted to a thin rule. */
+  header {
+    border-bottom: 1px solid var(--line);
+    padding: 22px 28px 18px;
+    display: flex;
+    align-items: baseline;
+    gap: 18px;
+    flex-wrap: wrap;
+    background:
+      repeating-linear-gradient(135deg, #1a1c20 0 14px, #101114 14px 28px) 0 0 / 100% 3px no-repeat,
+      var(--bg);
+  }
+  h1 {
+    font-size: 19px; margin: 0; letter-spacing: .14em; text-transform: uppercase;
+    font-weight: 600;
+  }
+  .tagline { color: var(--ink-dim); font-size: 13.5px; }
+  .spacer { flex: 1; }
+  .stat { font-family: var(--mono); font-size: 12px; color: var(--ink-faint); }
+  .stat b { color: var(--ink); font-weight: 600; }
+
+  main { padding: 24px 28px 64px; max-width: 1280px; }
+  section { margin-bottom: 38px; }
+  h2 {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .13em;
+    color: var(--ink-dim); margin: 0 0 4px; font-weight: 600;
+  }
+  .sub { color: var(--ink-faint); font-size: 13px; margin: 0 0 14px; max-width: 68ch; }
+
+  .findings { display: flex; flex-direction: column; gap: 10px; }
+  .finding {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--ink-faint);
+    border-radius: 3px;
+    padding: 13px 16px;
+  }
+  .finding.alert { border-left-color: var(--alert); }
+  .finding.warn  { border-left-color: var(--accent); }
+  .finding.info  { border-left-color: var(--ink-faint); }
+  .finding .label {
+    font-family: var(--mono); font-size: 10.5px; text-transform: uppercase;
+    letter-spacing: .1em; color: var(--ink-dim); margin-bottom: 5px;
+  }
+  .finding .headline { font-size: 15px; margin-bottom: 4px; }
+  .finding .headline b { color: var(--accent); font-weight: 600; }
+  .finding .detail { font-family: var(--mono); font-size: 12.5px; color: var(--ink-dim); }
+  .finding .note { font-size: 12.5px; color: var(--ink-faint); margin-top: 6px; font-style: italic; }
+
+  .clean {
+    border: 1px dashed var(--line); border-radius: 3px; padding: 22px;
+    color: var(--ok); font-family: var(--mono); font-size: 13px; text-align: center;
+  }
+
+  /* The facing page. Objects down the side, takes across the top: the shape a script
+     supervisor already reads, so nothing has to be learned. */
+  .grid-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 3px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  thead th {
+    background: var(--panel-2); text-align: left; padding: 10px 14px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .06em;
+    color: var(--ink-dim); font-weight: 500; white-space: nowrap;
+    border-bottom: 1px solid var(--line); position: sticky; top: 0;
+  }
+  tbody td {
+    padding: 9px 14px; border-bottom: 1px solid #212429; vertical-align: top;
+    font-family: var(--mono); font-size: 12.5px; white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: #14161a; }
+  .ent { font-family: var(--sans); font-size: 14px; color: var(--ink); }
+  .cat { color: var(--ink-faint); font-size: 11px; margin-left: 7px; }
+  .pos { color: var(--ink); }
+  .depth { color: var(--ink-faint); }
+  .absent { color: var(--alert); }
+  .odd { color: var(--accent); }
+  .via {
+    display: inline-block; margin-left: 6px; font-size: 9.5px; letter-spacing: .06em;
+    color: var(--accent-dim); border: 1px solid var(--accent-dim); border-radius: 2px;
+    padding: 0 3px; vertical-align: 1px;
+  }
+
+  .takes { display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); gap: 12px; }
+  .take {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 3px; padding: 14px 16px;
+  }
+  .take .id {
+    font-family: var(--mono); font-size: 12px; color: var(--accent);
+    letter-spacing: .07em; margin-bottom: 6px;
+  }
+  .take .summary { font-size: 13.5px; color: var(--ink-dim); line-height: 1.5; }
+  .take .meta {
+    font-family: var(--mono); font-size: 11px; color: var(--ink-faint);
+    margin-top: 9px; padding-top: 9px; border-top: 1px solid #212429;
+  }
+
+  footer {
+    border-top: 1px solid var(--line); padding: 18px 28px; color: var(--ink-faint);
+    font-size: 12px; font-family: var(--mono);
+  }
+  .err { color: var(--alert); font-family: var(--mono); font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Dailies</h1>
+  <span class="tagline">Continuity records, written while you shoot.</span>
+  <span class="spacer"></span>
+  <span class="stat" id="stats"></span>
+</header>
+
+<main>
+  <section>
+    <h2>What changed between takes</h2>
+    <p class="sub">
+      Every take was described independently, then reconciled to one vocabulary and
+      re-examined for anything a pass failed to mention. What survives is what actually
+      differs.
+    </p>
+    <div class="findings" id="findings"></div>
+  </section>
+
+  <section>
+    <h2>Facing page</h2>
+    <p class="sub">
+      Every object in the scene and where it sat in each take. Cells in amber differ from the
+      majority. <span style="color:var(--alert)">Absent</span> means checked for and not
+      found, not merely unmentioned.
+    </p>
+    <div class="grid-wrap"><table id="matrix"></table></div>
+  </section>
+
+  <section>
+    <h2>Takes</h2>
+    <p class="sub">As captured, in order.</p>
+    <div class="takes" id="takes"></div>
+  </section>
+</main>
+
+<footer id="footer"></footer>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+async function api(path) {
+  const res = await fetch(path);
+  if (!res.ok) throw new Error(`${path} -> ${res.status}`);
+  return res.json();
+}
+
+function el(tag, cls, html) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (html !== undefined) n.innerHTML = html;
+  return n;
+}
+
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => (
+  { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]
+));
+
+function renderFindings(c) {
+  const box = $("findings");
+  box.innerHTML = "";
+  const total = c.missing.length + c.deltas.length + c.camera_shifts.length;
+  if (!total) {
+    box.appendChild(el("div", "clean", "Continuity consistent across all takes."));
+    return;
+  }
+
+  // Camera moves first and visually quietest: they explain away a cluster of apparent
+  // problems, so seeing them first stops a reader chasing ghosts.
+  for (const s of c.camera_shifts) {
+    const n = el("div", "finding info");
+    n.appendChild(el("div", "label", "camera move"));
+    n.appendChild(el("div", "headline",
+      `<b>${esc(s.take_id)}</b> — ${s.entities.length} objects shifted ${esc(s.field)} together`));
+    n.appendChild(el("div", "detail",
+      `${esc(s.from)} &rarr; ${esc(s.to)} for ${s.entities.map(esc).join(", ")}`));
+    n.appendChild(el("div", "note", "The whole frame moved, so this is framing, not continuity."));
+    box.appendChild(n);
+  }
+
+  for (const m of c.missing) {
+    const n = el("div", "finding alert");
+    n.appendChild(el("div", "label", "not present"));
+    n.appendChild(el("div", "headline",
+      `<b>${esc(m.entity)}</b> is absent from ${m.absent_from.map(esc).join(", ")}`));
+    n.appendChild(el("div", "detail", `present in ${m.present_in.map(esc).join(", ")}`));
+    box.appendChild(n);
+  }
+
+  for (const d of c.deltas) {
+    const n = el("div", "finding warn");
+    n.appendChild(el("div", "label", esc(d.severity)));
+    n.appendChild(el("div", "headline", `<b>${esc(d.entity)}</b> — ${esc(d.field)} differs`));
+    const outliers = Object.entries(d.outliers)
+      .map(([t, v]) => `${esc(t)} has '${esc(v)}'`).join(", ");
+    n.appendChild(el("div", "detail",
+      `${d.agreeing_takes.length} takes agree on '${esc(d.expected)}' &nbsp;·&nbsp; ${outliers}`));
+    box.appendChild(n);
+  }
+}
+
+function renderMatrix(entities, takeIds) {
+  const t = $("matrix");
+  t.innerHTML = "";
+  const thead = el("thead");
+  const hr = el("tr");
+  hr.appendChild(el("th", null, "Object"));
+  takeIds.forEach(id => hr.appendChild(el("th", null, esc(id.replace(/^take_0*/, "take ")))));
+  thead.appendChild(hr);
+  t.appendChild(thead);
+
+  const tbody = el("tbody");
+  for (const e of entities) {
+    const tr = el("tr");
+    tr.appendChild(el("td", null,
+      `<span class="ent">${esc(e.entity)}</span><span class="cat">${esc(e.category)}</span>`));
+
+    // Majority position, so a cell that disagrees can be marked without a second pass.
+    const counts = {};
+    takeIds.forEach(id => {
+      const c = e.per_take[id];
+      if (c) counts[c.position_h] = (counts[c.position_h] || 0) + 1;
+    });
+    const majority = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
+
+    for (const id of takeIds) {
+      const cell = e.per_take[id];
+      if (!cell) {
+        tr.appendChild(el("td", null, `<span class="absent">absent</span>`));
+        continue;
+      }
+      const odd = cell.position_h !== majority;
+      const via = cell.via === "presence_check" ? '<span class="via">rechecked</span>' : "";
+      tr.appendChild(el("td", null,
+        `<span class="${odd ? "odd" : "pos"}">${esc(cell.position_h)}</span> ` +
+        `<span class="depth">${esc(cell.depth)}</span>${via}`));
+    }
+    tbody.appendChild(tr);
+  }
+  t.appendChild(tbody);
+}
+
+function renderTakes(takes) {
+  const box = $("takes");
+  box.innerHTML = "";
+  for (const t of takes) {
+    const n = el("div", "take");
+    n.appendChild(el("div", "id", esc(t.take_id)));
+    n.appendChild(el("div", "summary", esc(t.scene_summary || "No summary.")));
+    const mins = Math.floor(t.duration_s / 60), secs = Math.round(t.duration_s % 60);
+    n.appendChild(el("div", "meta",
+      `${mins}:${String(secs).padStart(2, "0")} · ${t.frames_used} frames · ` +
+      `${t.observations.length} objects · ${esc(t.model)}`));
+    box.appendChild(n);
+  }
+}
+
+async function boot() {
+  try {
+    const scenes = await api("/api/scenes");
+    if (!scenes.length) {
+      $("findings").innerHTML =
+        '<div class="err">No scenes loaded. Run the pipeline, or set DAILIES_OUT.</div>';
+      return;
+    }
+    // Richest scene first: a judge landing cold should see the fullest example.
+    scenes.sort((a, b) => b.observation_count - a.observation_count);
+    const scene = scenes[0].scene_id;
+
+    const [takes, continuity, entities, health] = await Promise.all([
+      api(`/api/scenes/${scene}/takes`),
+      api(`/api/scenes/${scene}/continuity`),
+      api(`/api/scenes/${scene}/entities`),
+      api("/api/health"),
+    ]);
+
+    const takeIds = takes.map(t => t.take_id).sort();
+    $("stats").innerHTML =
+      `<b>${scene}</b> · ${takes.length} takes · ${entities.length} objects · ` +
+      `${health.observations} observations`;
+
+    renderFindings(continuity);
+    renderMatrix(entities, takeIds);
+    renderTakes(takes);
+
+    $("footer").textContent =
+      `${health.backend} store · scene state produced by ${takes[0]?.model || "gemini"} · ` +
+      `frames sampled from POV capture`;
+  } catch (err) {
+    $("findings").innerHTML = `<div class="err">${esc(err.message)}</div>`;
+  }
+}
+
+boot();
+</script>
+</body>
+</html>
