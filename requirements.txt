@@ -1,10 +1,15 @@
 # Google Cloud AI SDK. The only model provider used, and the only one permitted.
 google-genai>=2.18.0
 
+# The ClickHouse partner integration. mcp-clickhouse is the official server and is
+# launched as a subprocess over stdio; mcp is the client half that talks to it.
+mcp>=1.29.0
+mcp-clickhouse>=0.4.1
+
 # Web app: the hosted surface judges test.
 fastapi>=0.115.0
 uvicorn[standard]>=0.30.0
 
-# Also required at runtime:
+# Also required when running the capture pipeline locally (not needed by the web app):
 #   ffmpeg and ffprobe on PATH  (frame sampling, https://ffmpeg.org/download.html)
 #   GOOGLE_API_KEY in the environment  (https://aistudio.google.com/apikey)

@@ -1,0 +1,19 @@
+# Never let private footage or credentials reach a build context.
+footage/
+out/
+testdata/
+.env
+.env.*
+!.env.example
+
+.venv/
+__pycache__/
+*.py[cod]
+.git/
+.design/
+DEMO_SCRIPT.md
+SUBMISSION_CHECKLIST.md
+*.mp4
+*.mov
+*.jpg
+*.png

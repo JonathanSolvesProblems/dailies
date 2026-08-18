@@ -1,0 +1,104 @@
+{
+  "take_id": "take_002",
+  "scene_summary": "A first-person perspective of a person working at a home office desk with a laptop, microphone, headphones, and a coffee mug.",
+  "observations": [
+    {
+      "entity": "laptop",
+      "category": "prop",
+      "position_h": "center",
+      "depth": "foreground",
+      "state": "open and active",
+      "relative_to": "desk",
+      "moved_during_take": false,
+      "confidence": 0.95
+    },
+    {
+      "entity": "coffee mug",
+      "category": "prop",
+      "position_h": "right",
+      "depth": "midground",
+      "state": "on napkin",
+      "relative_to": "desk",
+      "moved_during_take": false,
+      "confidence": 0.95
+    },
+    {
+      "entity": "microphone",
+      "category": "prop",
+      "position_h": "left",
+      "depth": "midground",
+      "state": "on stand",
+      "relative_to": "desk",
+      "moved_during_take": false,
+      "confidence": 0.95
+    },
+    {
+      "entity": "computer monitor",
+      "category": "set",
+      "position_h": "center",
+      "depth": "background",
+      "state": "powered off",
+      "relative_to": "desk",
+      "moved_during_take": false,
+      "confidence": 0.9
+    },
+    {
+      "entity": "headphones",
+      "category": "prop",
+      "position_h": "left",
+      "depth": "foreground",
+      "state": "lying on desk",
+      "relative_to": "desk",
+      "moved_during_take": false,
+      "confidence": 0.9
+    },
+    {
+      "entity": "computer mouse",
+      "category": "prop",
+      "position_h": "right",
+      "depth": "foreground",
+      "state": "on mousepad",
+      "relative_to": "mousepad",
+      "moved_during_take": true,
+      "confidence": 0.9
+    },
+    {
+      "entity": "mousepad",
+      "category": "prop",
+      "position_h": "right",
+      "depth": "foreground",
+      "state": "flat on desk",
+      "relative_to": "desk",
+      "moved_during_take": false,
+      "confidence": 0.9
+    },
+    {
+      "entity": "desk",
+      "category": "prop",
+      "position_h": "center",
+      "depth": "foreground",
+      "state": "stationary",
+      "relative_to": "",
+      "moved_during_take": false,
+      "confidence": 1.0,
+      "via": "presence_check",
+      "seen_at_timestamp": 25.774,
+      "where_in_frame": "The wooden surface supporting the laptop, microphone, and other items, occupying the lower half of the frame."
+    },
+    {
+      "entity": "smartphone",
+      "category": "prop",
+      "position_h": "right",
+      "depth": "foreground",
+      "state": "stationary",
+      "relative_to": "",
+      "moved_during_take": false,
+      "confidence": 0.95,
+      "via": "presence_check",
+      "seen_at_timestamp": 103.095,
+      "where_in_frame": "On the bottom right of the frame, lying flat on the desk next to the purple mousepad."
+    }
+  ],
+  "model": "gemini-3.5-flash",
+  "frames_used": 7
+}

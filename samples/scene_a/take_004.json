@@ -1,0 +1,59 @@
+{
+  "take_id": "take_004",
+  "source_video": "(not distributed)",
+  "duration_s": 180.373,
+  "width": 1552,
+  "height": 2064,
+  "frames": [
+    {
+      "index": 0,
+      "timestamp_s": 25.768,
+      "source": "sample"
+    },
+    {
+      "index": 1,
+      "timestamp_s": 51.535,
+      "source": "sample"
+    },
+    {
+      "index": 2,
+      "timestamp_s": 55.167,
+      "source": "scene"
+    },
+    {
+      "index": 3,
+      "timestamp_s": 64.757,
+      "source": "scene"
+    },
+    {
+      "index": 4,
+      "timestamp_s": 77.303,
+      "source": "sample"
+    },
+    {
+      "index": 5,
+      "timestamp_s": 92.627,
+      "source": "scene"
+    },
+    {
+      "index": 6,
+      "timestamp_s": 103.07,
+      "source": "sample"
+    },
+    {
+      "index": 7,
+      "timestamp_s": 128.838,
+      "source": "sample"
+    },
+    {
+      "index": 8,
+      "timestamp_s": 154.606,
+      "source": "sample"
+    },
+    {
+      "index": 9,
+      "timestamp_s": 178.949,
+      "source": "scene"
+    }
+  ]
+}
