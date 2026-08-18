@@ -1,0 +1,106 @@
+{
+  "project": "dailies",
+  "date": "2026-08-18",
+  "platform": "web-app",
+  "family": "mechanical-industrial",
+  "metaphor": "a follow-focus barrel and the tape marks a camera assistant lays on a set floor: the instrument whose whole purpose is recording exactly where everything was so it can be matched again",
+  "register": "precise",
+
+  "category_convention_avoided": "Film and video tooling ships one of two looks: the NLE timeline (near-black chrome, thin blue accent, panels docked around a scrubber) or the AI-video product (gradient hero, purple-to-pink wash, floating glass cards). Both were rejected. This is not an editor and it is not a generator; it is a measuring instrument that gets read on a set.",
+
+  "design_code": [
+    "The canvas is mid-dark anodized gunmetal, not near-black, because this is a hand instrument used in a lit room and read at arm's length, not a monitor in a dark grade suite.",
+    "Depth is milled, not floated: readouts sit in recessed wells and controls stand proud on a bevel, because a camera assistant's world is machined parts with real seating, and because a shadow that describes elevation reads as an object while a blurred drop shadow reads as a card.",
+    "Takes run along an engraved scale with detent ticks rather than table columns, because comparing one object across takes is the single operation this tool exists for, and a lens barrel already solved that reading problem.",
+    "Motion is detented and stepped, never eased, because every control this metaphor borrows from clicks between marked positions and none of them glides.",
+    "One signal jade is reserved for a reading that has been anchored to evidence. Absence is marked in oxide red. Nothing else is coloured, so colour always means something."
+  ],
+
+  "anti_brief": [
+    "No timeline scrubber, no docked panels, no NLE chrome.",
+    "No glow, bloom or emissive accent. Light is not the material here; machined metal is.",
+    "No paper, no hairline rules on off-white, no document column. Print-editorial is barred and is also wrong for an instrument."
+  ],
+
+  "expressive_axis": "structure — the take scale replaces the table, and the facing page is read as a barrel readout rather than a spreadsheet",
+
+  "canvas": {
+    "posture": "mid-dark",
+    "home_polarity": "dark",
+    "reason": "Every prior dark project in the ledger sits near-black (#0b0d12, #0E1210). A mid-dark anodized body is both truer to the metaphor and unoccupied."
+  },
+
+  "palette": {
+    "dark": {
+      "body": "#31363B",
+      "well": "#272B2F",
+      "raised": "#3B4147",
+      "engrave": "#1E2225",
+      "edge": "#4A5157",
+      "edge_bright": "#5C646B",
+      "ink": "#E3E7E9",
+      "ink_dim": "#A2ABB1",
+      "ink_faint": "#767F86",
+      "accent": "#2FBF84",
+      "accent_deep": "#1B7A54",
+      "alert": "#C4553C",
+      "alert_deep": "#7E3324"
+    },
+    "light": {
+      "body": "#C6CBCE",
+      "well": "#B3B9BD",
+      "raised": "#D6DBDE",
+      "engrave": "#9AA1A6",
+      "edge": "#8D959A",
+      "edge_bright": "#FFFFFF",
+      "ink": "#1B1F22",
+      "ink_dim": "#4A5257",
+      "ink_faint": "#6C757A",
+      "accent": "#136B49",
+      "accent_deep": "#0C4A32",
+      "alert": "#8E3524",
+      "alert_deep": "#5E2117"
+    },
+    "accent_hue_deg": 152,
+    "reason": "Hue 152 is the one clear gap in the ledger, which already holds 8, 16, 41, 60, 125, 186, 220, 263 and 338. Read as an instrument's anchored-reading lamp rather than a success tick: it marks records verified against a named frame, not records that are 'good'."
+  },
+
+  "type": {
+    "voice": "engineered, condensed, legible at a glance across a room",
+    "display": "Saira Semi Condensed",
+    "body": "Saira Semi Condensed",
+    "mono": "Chivo Mono",
+    "figures": "tabular",
+    "scale_ratio": 1.2,
+    "reason": "Unused families. The ledger holds Space Grotesk, Manrope, Instrument Serif, Outfit, Plus Jakarta, Space Mono, JetBrains Mono, Archivo, Source Serif, Spline Sans Mono, Barlow Condensed, IBM Plex Sans, DM Mono, Public Sans, Fraunces and Inter Tight. Saira is engineered signage rather than editorial, which is what an instrument face wants. Tabular figures are mandatory: take numbers and timestamps are read in columns."
+  },
+
+  "structure": {
+    "archetype": "instrument-panel with engraved take scale",
+    "grid": "full-width plate, readouts in milled wells, take scale as a fixed-tick axis"
+  },
+
+  "edge_and_depth": {
+    "radius_scale": [0, 2, 3],
+    "border_weight": "1px engrave line plus 1px top highlight to describe milled seating",
+    "depth": "milled: inset wells via dark inset shadow and a bright top edge, raised controls via the inverse",
+    "reason": "Square-to-barely-eased corners because machined parts are cut, not drawn. No blurred drop shadows anywhere."
+  },
+
+  "motion": {
+    "brief": "Motion explains seating and stepping, nothing else.",
+    "signature": "the take scale advances in detents: values snap between marks with a 1-frame overshoot, never a glide",
+    "resting": "completely static; no ambient pulse, drift or breath",
+    "durations_ms": [90, 140],
+    "easing": "steps and cubic-bezier(0.2, 0, 0, 1) only",
+    "reduced_motion": "all stepping replaced by instant state change"
+  },
+
+  "ledger_clearance": {
+    "_prior_dark_console": "canvas mid-dark #31363B not near-black #0b0d12; accent 152 not 16; instrument-scale not console-panels; milled depth not tinted-shadow; detented motion not static",
+    "still-here": "family mechanical-industrial not luminous-emissive; canvas #31363B not #0E1210; accent 152 not 41; milled not emitted-halo; take-scale not contact-sheet; no glow anywhere",
+    "assay": "canvas mid-dark not light-mid #BCBEB8; accent 152 not 186; mechanical not print-editorial; milled depth not print-flat",
+    "alprosolutions": "canvas far darker and cool-neutral not #DFE3E0; accent 152 not 60; milled inset not hard-offset; Saira not Barlow Condensed",
+    "cooldown": "no warm-neutral or brown canvas anywhere, respecting the logged rejection of muted warm-mid browns"
+  }
+}
