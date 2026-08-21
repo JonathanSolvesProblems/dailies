@@ -181,6 +181,66 @@ async def ask_question(q: Question):
     return result.to_dict()
 
 
+class LiveFrame(BaseModel):
+    frame: str  # base64 jpeg, or a data: URL
+    scene_id: str
+    reference_take: str | None = None
+    scene_context: str | None = None
+
+
+@app.post("/api/live/check")
+async def live_check(payload: LiveFrame):
+    """One frame from a rolling take, checked against a reference take.
+
+    Stateless on purpose. A live check that depends on having seen the previous frame
+    cannot recover from a dropped connection, and sets drop connections constantly.
+    """
+    from pipeline.live import check_frame_async, decode_frame
+
+    takes = store.get_takes(payload.scene_id)
+    if not takes:
+        raise HTTPException(status_code=404, detail=f"No scene '{payload.scene_id}'")
+
+    ref_id = payload.reference_take or takes[0].take_id
+    observations = [
+        to_dict(o) for o in store.get_observations(payload.scene_id) if o.take_id == ref_id
+    ]
+    if not observations:
+        raise HTTPException(status_code=404, detail=f"No reference state for take '{ref_id}'")
+
+    try:
+        result = await check_frame_async(
+            decode_frame(payload.frame), observations, payload.scene_context
+        )
+    except (RuntimeError, ValueError) as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}") from exc
+
+    return {**result.to_dict(), "reference_take": ref_id}
+
+
+@app.get("/api/live/reference/{scene_id}")
+def live_reference(scene_id: str, take_id: str | None = None):
+    """What the operator is being held to, so the live view can show it alongside."""
+    takes = store.get_takes(scene_id)
+    if not takes:
+        raise HTTPException(status_code=404, detail=f"No scene '{scene_id}'")
+    ref_id = take_id or takes[0].take_id
+    observations = [o for o in store.get_observations(scene_id) if o.take_id == ref_id]
+    return {
+        "scene_id": scene_id,
+        "reference_take": ref_id,
+        "available_takes": [t.take_id for t in takes],
+        "observations": [to_dict(o) for o in observations],
+    }
+
+
+@app.get("/live")
+def live_page():
+    return FileResponse(STATIC / "live.html")
+
+
 @app.get("/api/capabilities")
 def capabilities():
     """What this deployment can actually do, so the UI never offers a dead control."""

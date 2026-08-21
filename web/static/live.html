@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dailies — rolling</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Semi+Condensed:wght@400;500;600;700&family=Chivo+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Same instrument as the report view, in its operating mode rather than its reading
+   mode. The report is read at a desk; this is glanced at from three feet away while
+   something else has your attention, so everything is bigger, there is one verdict
+   at a time, and the verdict is legible without focusing on it. */
+:root {
+  --body: #31363B; --well: #272B2F; --raised: #3B4147; --engrave: #1E2225;
+  --edge: #4A5157; --edge-bright: #5C646B;
+  --ink: #E3E7E9; --ink-dim: #A2ABB1; --ink-faint: #767F86;
+  --accent: #2FBF84; --accent-deep: #1B7A54;
+  --alert: #C4553C; --alert-deep: #7E3324;
+  --sans: "Saira Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+  --mono: "Chivo Mono", ui-monospace, Consolas, monospace;
+}
+:root[data-theme="light"] {
+  --body: #C6CBCE; --well: #B3B9BD; --raised: #D6DBDE; --engrave: #9AA1A6;
+  --edge: #8D959A; --edge-bright: #FFFFFF;
+  --ink: #1B1F22; --ink-dim: #4A5257; --ink-faint: #6C757A;
+  --accent: #136B49; --accent-deep: #0C4A32; --alert: #8E3524; --alert-deep: #5E2117;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--body); color: var(--ink); font-family: var(--sans);
+  font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased;
+  display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+}
+
+header {
+  background: var(--raised); border-bottom: 1px solid var(--engrave);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+  padding: 12px 22px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
+h1 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; }
+.spacer { flex: 1; }
+select, .btn {
+  background: var(--raised); color: var(--ink); font-family: var(--sans);
+  border: 1px solid var(--engrave); border-top-color: var(--edge-bright);
+  border-radius: 2px; padding: 7px 14px; font-size: 13px; cursor: pointer;
+  letter-spacing: .1em; text-transform: uppercase; font-weight: 600;
+}
+.btn:active { border-top-color: var(--engrave); border-bottom-color: var(--edge-bright); box-shadow: inset 0 2px 0 rgba(0,0,0,.3); }
+.btn.rolling { background: var(--alert-deep); border-top-color: var(--alert); color: #fff; }
+.btn:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+select { text-transform: none; letter-spacing: 0; font-weight: 400; }
+
+main { flex: 1; display: grid; grid-template-columns: 1fr 380px; min-height: 0; }
+@media (max-width: 900px) { main { grid-template-columns: 1fr; } .side { display: none; } }
+
+.stage { position: relative; background: var(--engrave); overflow: hidden; }
+video { width: 100%; height: 100%; object-fit: cover; display: block; }
+canvas { display: none; }
+
+/* The verdict. Big enough to read peripherally, because the operator is watching the
+   scene, not this screen. */
+.verdict {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 20px 24px; background: linear-gradient(to top, rgba(20,23,26,.94), rgba(20,23,26,0));
+}
+.state {
+  font-size: 40px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  line-height: 1;
+}
+.state.hold { color: var(--accent); }
+.state.break { color: var(--alert); }
+.state.idle { color: var(--ink-faint); }
+.detail { font-size: 20px; margin-top: 8px; color: var(--ink); }
+.detail em { color: var(--alert); font-style: normal; font-weight: 600; }
+.note { font-family: var(--mono); font-size: 12px; color: var(--ink-dim); margin-top: 8px; }
+
+.pill {
+  position: absolute; top: 14px; left: 14px; display: flex; align-items: center; gap: 8px;
+  background: rgba(20,23,26,.82); border: 1px solid var(--engrave); border-radius: 2px;
+  padding: 6px 12px; font-family: var(--mono); font-size: 11px; letter-spacing: .08em;
+}
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-faint); }
+.dot.on { background: var(--alert); animation: blink 1.2s steps(1,end) infinite; }
+@keyframes blink { 0%,50% { opacity: 1 } 50.01%,100% { opacity: .25 } }
+
+.side {
+  background: var(--body); border-left: 1px solid var(--engrave);
+  overflow-y: auto; padding: 18px 20px;
+}
+h2 {
+  margin: 0 0 10px; font-size: 11px; font-weight: 600; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--ink-dim);
+  display: flex; align-items: center; gap: 8px;
+}
+h2::before { content: ""; width: 3px; height: 12px; background: var(--accent); }
+.ref { list-style: none; margin: 0 0 22px; padding: 0; }
+.ref li {
+  display: flex; justify-content: space-between; gap: 10px;
+  padding: 7px 0; border-bottom: 1px solid var(--engrave); font-size: 14px;
+}
+.ref li:last-child { border-bottom: 0; }
+.ref .pos { font-family: var(--mono); font-size: 12px; color: var(--ink-dim); }
+.ref li.flagged { background: var(--well); margin: 0 -8px; padding: 7px 8px; }
+.ref li.flagged .nm { color: var(--alert); font-weight: 600; }
+.ref li.flagged .pos { color: var(--alert); }
+
+.log { list-style: none; margin: 0; padding: 0; font-family: var(--mono); font-size: 11.5px; }
+.log li { padding: 5px 0; border-bottom: 1px solid var(--engrave); color: var(--ink-faint); display: flex; gap: 9px; }
+.log li b { color: var(--ink-dim); font-weight: 400; }
+.log li.hit { color: var(--alert); }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Rolling</h1>
+  <select id="scene" aria-label="Scene"></select>
+  <select id="ref" aria-label="Reference take"></select>
+  <span class="spacer"></span>
+  <span class="readout" id="stats" style="font-family:var(--mono);font-size:11px;color:var(--ink-faint)"></span>
+  <button class="btn" id="roll">Roll</button>
+</header>
+
+<main>
+  <div class="stage">
+    <video id="cam" playsinline muted autoplay></video>
+    <canvas id="grab"></canvas>
+    <div class="pill"><span class="dot" id="dot"></span><span id="pillText">standby</span></div>
+    <div class="verdict">
+      <div class="state idle" id="state">Standby</div>
+      <div class="detail" id="detail">Pick a reference take and press Roll.</div>
+      <div class="note" id="note"></div>
+    </div>
+  </div>
+
+  <aside class="side">
+    <h2>Reference</h2>
+    <ul class="ref" id="refList"></ul>
+    <h2>Checks</h2>
+    <ul class="log" id="log"></ul>
+  </aside>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+if (["light","dark"].includes(new URLSearchParams(location.search).get("theme")))
+  document.documentElement.setAttribute("data-theme", new URLSearchParams(location.search).get("theme"));
+
+// 512px: full glasses capture is 1552x2064, which is far more pixels than "did the mug
+// move" needs, and every one of them costs upload and inference time.
+const FRAME_W = 512;
+
+// Gap BETWEEN checks, not a fixed cadence. The check itself takes 4-14 seconds, so a
+// timer firing every few seconds would stack overlapping requests until the queue
+// collapsed. Each check is scheduled only once the previous one has answered.
+const GAP_MS = 2500;
+
+let rolling = false, timer = null, reference = [], checks = 0, hits = 0;
+
+async function api(p, opts) {
+  const r = await fetch(p, opts);
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.detail || `HTTP ${r.status}`);
+  return d;
+}
+
+function grabFrame() {
+  const v = $("cam"), c = $("grab");
+  if (!v.videoWidth) return null;
+  const scale = FRAME_W / v.videoWidth;
+  c.width = FRAME_W;
+  c.height = Math.round(v.videoHeight * scale);
+  c.getContext("2d").drawImage(v, 0, 0, c.width, c.height);
+  return c.toDataURL("image/jpeg", 0.72);
+}
+
+function renderReference(flagged = new Set()) {
+  const ul = $("refList");
+  ul.innerHTML = "";
+  for (const o of reference) {
+    if (o.category === "actor") continue;
+    const li = document.createElement("li");
+    if (flagged.has(o.entity)) li.className = "flagged";
+    li.innerHTML = `<span class="nm">${esc(o.entity)}</span><span class="pos">${esc(o.position_h)}</span>`;
+    ul.appendChild(li);
+  }
+}
+
+function logCheck(ms, divs) {
+  const ul = $("log");
+  const li = document.createElement("li");
+  if (divs.length) li.className = "hit";
+  const t = new Date().toLocaleTimeString([], { hour12: false });
+  li.innerHTML = `<b>${t}</b><span>${divs.length ? divs.map(d => esc(d.entity)).join(", ") : "holds"}</span><span style="margin-left:auto">${ms}ms</span>`;
+  ul.insertBefore(li, ul.firstChild);
+  while (ul.children.length > 40) ul.removeChild(ul.lastChild);
+}
+
+async function checkOnce() {
+  const frame = grabFrame();
+  if (!frame) return;
+  try {
+    const res = await api("/api/live/check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        frame,
+        scene_id: $("scene").value,
+        reference_take: $("ref").value,
+        scene_context: null,
+      }),
+    });
+    checks++;
+    const divs = res.divergences || [];
+    if (divs.length) hits++;
+
+    if (divs.length) {
+      $("state").className = "state break";
+      $("state").textContent = "Off the mark";
+      $("detail").innerHTML = divs.map(d =>
+        `<em>${esc(d.entity)}</em> — reference has it ${esc(d.expected)}, frame shows ${esc(d.observed)}`
+      ).join("<br>");
+    } else {
+      $("state").className = "state hold";
+      $("state").textContent = "Holds";
+      $("detail").textContent = "Nothing contradicts the reference.";
+    }
+    $("note").textContent = `${res.frame_note || ""}  ·  ${res.latency_ms}ms · ${res.model}`;
+    $("stats").textContent = `${checks} checks · ${hits} flagged`;
+    renderReference(new Set(divs.map(d => d.entity)));
+    logCheck(res.latency_ms, divs);
+  } catch (err) {
+    $("state").className = "state idle";
+    $("state").textContent = "Check failed";
+    $("detail").textContent = err.message;
+  }
+}
+
+async function start() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 1280 }, facingMode: "environment" }, audio: false,
+    });
+    $("cam").srcObject = stream;
+  } catch (err) {
+    $("state").className = "state idle";
+    $("state").textContent = "No camera";
+    $("detail").textContent = err.message + " — a camera is required to roll.";
+    return false;
+  }
+  return true;
+}
+
+// Sequential loop: check, wait, check again. Never two in flight at once.
+async function loop() {
+  while (rolling) {
+    await checkOnce();
+    if (!rolling) break;
+    await new Promise(r => { timer = setTimeout(r, GAP_MS); });
+  }
+}
+
+async function toggleRoll() {
+  if (rolling) {
+    rolling = false;
+    clearTimeout(timer);
+    $("roll").textContent = "Roll";
+    $("roll").classList.remove("rolling");
+    $("dot").classList.remove("on");
+    $("pillText").textContent = "standby";
+    $("state").className = "state idle";
+    $("state").textContent = "Cut";
+    return;
+  }
+  if (!$("cam").srcObject && !(await start())) return;
+  rolling = true;
+  $("roll").textContent = "Cut";
+  $("roll").classList.add("rolling");
+  $("dot").classList.add("on");
+  $("pillText").textContent = "rolling";
+  $("state").className = "state idle";
+  $("state").textContent = "Checking";
+  $("detail").textContent = "";
+  loop();
+}
+
+async function loadReference() {
+  const d = await api(`/api/live/reference/${$("scene").value}?take_id=${$("ref").value}`);
+  reference = d.observations;
+  renderReference();
+}
+
+async function boot() {
+  const scenes = await api("/api/scenes");
+  scenes.sort((a, b) => b.observation_count - a.observation_count);
+  $("scene").innerHTML = scenes.map(s => `<option>${esc(s.scene_id)}</option>`).join("");
+
+  async function fillTakes() {
+    const d = await api(`/api/live/reference/${$("scene").value}`);
+    $("ref").innerHTML = d.available_takes
+      .map(t => `<option${t === d.reference_take ? " selected" : ""}>${esc(t)}</option>`).join("");
+    await loadReference();
+  }
+  $("scene").onchange = fillTakes;
+  $("ref").onchange = loadReference;
+  $("roll").onclick = toggleRoll;
+  await fillTakes();
+}
+boot().catch(e => { $("detail").textContent = e.message; });
+</script>
+</body>
+</html>
