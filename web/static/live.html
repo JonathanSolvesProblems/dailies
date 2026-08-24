@@ -33,7 +33,11 @@ body {
   background: var(--body); color: var(--ink); font-family: var(--sans);
   font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased;
   display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+  /* Nothing may push the page wider than the device. On a phone held on set there is no
+     horizontal scrollbar to rescue a control that has drifted off the edge. */
+  max-width: 100vw;
 }
+video, canvas { max-width: 100%; }
 
 header {
   background: var(--raised); border-bottom: 1px solid var(--engrave);
@@ -70,10 +74,18 @@ select { text-transform: none; letter-spacing: 0; font-weight: 400; }
 }
 .modes a:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 
-main { flex: 1; display: grid; grid-template-columns: 1fr 380px; min-height: 0; }
-@media (max-width: 900px) { main { grid-template-columns: 1fr; } .side { display: none; } }
+main { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) 380px; min-height: 0; min-width: 0; }
+/* minmax(0, 1fr), not 1fr. A bare 1fr track still floors at its content's min-content
+   width, so the video's intrinsic camera resolution would push this wider than the phone
+   it is being held on. */
+@media (max-width: 900px) { main { grid-template-columns: minmax(0, 1fr); } .side { display: none; } }
 
-.stage { position: relative; background: var(--engrave); overflow: hidden; }
+/* min-width: 0 is load-bearing, not tidying. A grid item defaults to min-width: auto,
+   which means it refuses to shrink below its content's intrinsic size. The video element
+   reports the camera's own width (640px and up), so without this the track floors at the
+   camera resolution, the grid grows wider than a phone screen, and the header stretches
+   with it until the controls sit off the right edge. */
+.stage { position: relative; background: var(--engrave); overflow: hidden; min-width: 0; }
 video { width: 100%; height: 100%; object-fit: cover; display: block; }
 canvas { display: none; }
 
@@ -129,6 +141,30 @@ h2::before { content: ""; width: 3px; height: 12px; background: var(--accent); }
 .log li b { color: var(--ink-dim); font-weight: 400; }
 .log li.hit { color: var(--alert); }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+
+/* A phone is the real operating position: worn glasses, phone in hand, on a set. At 390px
+   the spacer was eating the row and pushing Roll off the screen entirely, which made the
+   only control that matters unreachable in the only place this gets used. Roll now takes
+   its own full-width row with a proper thumb target, and the readout drops, because
+   telemetry is worth nothing if the button is gone. */
+@media (max-width: 640px) {
+  /* Grid, not flex-wrap. Wrapping put the scene selector on the title row where it
+     overflowed the viewport and clipped, and pushed Roll off the screen entirely. An
+     explicit two-column grid makes every row deliberate instead of emergent. */
+  header {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px 12px;
+    align-items: stretch;
+  }
+  h1 { grid-column: 1 / -1; font-size: 15px; letter-spacing: .16em; }
+  .modes { grid-column: 1 / -1; }
+  .modes a { flex: 1; text-align: center; }
+  select { width: 100%; min-width: 0; padding: 10px; }
+  #roll { grid-column: 1 / -1; padding: 15px; font-size: 16px; }
+  .spacer, .readout { display: none; }
+  .state { font-size: 30px; }
+  .detail { font-size: 16px; }
+  .verdict { padding: 16px; }
+}
 </style>
 </head>
 <body>
