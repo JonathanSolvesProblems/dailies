@@ -45,13 +45,43 @@ documented a reshoot. Finding it twenty seconds into the take has prevented one.
 It runs off any camera, so the loop works today and the glasses are a swap of the frame
 source rather than a dependency.
 
-**Honest latency: 4 to 14 seconds per check**, occasionally worse under load. So the claim
-is "catches it inside the take", not "instant". A take runs well over thirty seconds, so
-several checks land while the camera is still rolling, which is the whole requirement.
-Checks run sequentially rather than on a fixed timer; polling faster than the answer
-arrives just stacks requests until the queue collapses.
+**Latency: 4.2s median, 5.2s p90**, measured over twelve runs against a warm instance. So
+the claim is "catches it inside the take", not "instant". A take runs well over thirty
+seconds, so several checks land while the camera is still rolling, which is the whole
+requirement. Checks run sequentially rather than on a fixed timer; polling faster than the
+answer arrives just stacks requests until the queue collapses.
 
-### Why this uses Flash and not Flash-Lite
+### Choosing the model by measuring recall and latency together
+
+Two findings, both from measurement rather than reasoning, and the second only exists
+because the first was so expensive.
+
+**Flash-Lite is disqualified on recall, not speed.** It benchmarked about ten times faster,
+979ms against 5-15s. Then it was handed a horizontally mirrored frame, every object on the
+desk on the wrong side, and reported:
+
+> *"Laptop, monitor, coffee mug, and microphone are in their expected positions."*
+
+The speed was not a tradeoff, it was an artefact of not looking. A detector with no recall
+is a green light wired to nothing, and on a set that is worse than no tool because someone
+will trust it.
+
+**Gemini 3.5 Flash beats 3.6 Flash here**, three times faster at identical recall. Control
+frame (must stay silent) and mirrored frame (must flag), three runs each side:
+
+| model | frame | median | false alarms | caught |
+|---|---|---|---|---|
+| 3.6-flash | 512px | 11263ms | 0/3 | 3/3 |
+| 3.6-flash | 384px | 24268ms | 0/3 | 3/3 |
+| **3.5-flash** | **512px** | **3678ms** | **0/3** | **3/3** |
+| 3.5-flash | 384px | 3902ms | 0/3 | 3/3 |
+
+The newer model is slower without being better at this task, and frame size barely moves
+the number, so the lever is the model rather than the pixels. Note 3.6 at 384px being
+*slower* than at 512px: that is server-side variance, and a good argument for measuring a
+configuration rather than reasoning about it.
+
+Confirmed at twelve runs after the switch: 0 false alarms, 6 of 6 caught, 4.2s median.
 
 Flash-Lite benchmarked about ten times faster on this exact call, 979ms against 5-15s, and
 was chosen on that basis. Then it was handed a horizontally mirrored frame, every object on

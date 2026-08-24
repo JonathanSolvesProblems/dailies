@@ -43,8 +43,23 @@ logging.getLogger("google_genai").setLevel(logging.ERROR)
 # So: flash, and the check interval absorbs the latency instead. A take runs well over
 # thirty seconds, so a check every few seconds still catches a break inside the take,
 # which is the whole requirement.
-DEFAULT_MODEL = os.environ.get("DAILIES_LIVE_MODEL", "gemini-3.6-flash")
-FALLBACK_MODELS = ["gemini-3.5-flash", "gemini-2.5-flash"]
+# 3.5, not 3.6, and not lite. Recall and latency measured together, 3 runs per side,
+# control frame (must stay silent) and mirrored frame (must flag):
+#
+#   3.6-flash  512px   11263ms   0/3 false alarm   3/3 caught
+#   3.6-flash  384px   24268ms   0/3 false alarm   3/3 caught
+#   3.5-flash  512px    3678ms   0/3 false alarm   3/3 caught
+#   3.5-flash  384px    3902ms   0/3 false alarm   3/3 caught
+#
+# 3.5 is three times faster than 3.6 at identical recall: the newer model is slower here
+# without being better at the task. Frame size barely moves it, so the lever is the model,
+# not the pixels. Note that 3.6 at 384px was SLOWER than at 512px, which is server-side
+# variance rather than anything about the image, and is a good reason to measure a
+# configuration rather than reason about it.
+#
+# Lite is still excluded and always will be. See the note below.
+DEFAULT_MODEL = os.environ.get("DAILIES_LIVE_MODEL", "gemini-3.5-flash")
+FALLBACK_MODELS = ["gemini-3.6-flash", "gemini-2.5-flash"]
 
 # Clients send frames at roughly this width. Glasses capture at 1552x2064, which is far
 # more pixels than "did the mug move" needs and every one of them is latency on the wire
