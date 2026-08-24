@@ -31,6 +31,42 @@ and the agent writes its own SQL, runs it through the ClickHouse MCP server, and
 The artifact is the crew member's paperwork. Catching a continuity break is a consequence
 of having the records, not the identity of the product.
 
+## Rolling: catching it before the take is spoiled
+
+`/live` is the same instrument in its operating mode. Pick a reference take, press **Roll**,
+and every few seconds it checks what the camera sees against what that reference recorded.
+The verdict is one word, large enough to read from across the room, because the operator is
+watching the scene and not this screen.
+
+The report view answers *what went wrong today*. This answers *what is wrong right now*,
+which is the question the job actually asks. Finding the mug on the wrong side at wrap has
+documented a reshoot. Finding it twenty seconds into the take has prevented one.
+
+It runs off any camera, so the loop works today and the glasses are a swap of the frame
+source rather than a dependency.
+
+**Honest latency: 4 to 14 seconds per check**, occasionally worse under load. So the claim
+is "catches it inside the take", not "instant". A take runs well over thirty seconds, so
+several checks land while the camera is still rolling, which is the whole requirement.
+Checks run sequentially rather than on a fixed timer; polling faster than the answer
+arrives just stacks requests until the queue collapses.
+
+### Why this uses Flash and not Flash-Lite
+
+Flash-Lite benchmarked about ten times faster on this exact call, 979ms against 5-15s, and
+was chosen on that basis. Then it was handed a horizontally mirrored frame, every object on
+the desk on the wrong side, and reported:
+
+> *"Laptop, monitor, coffee mug, and microphone are in their expected positions."*
+
+Flash, on the same frame, flagged the mug, microphone, mouse and mousepad at 0.95 each and
+named the swap. The speed was not a tradeoff, it was an artefact of not looking. A detector
+with no recall is not a fast detector, it is a green light wired to nothing, and on a set
+that is worse than no tool because someone will trust it.
+
+Verified after the change: control frame silent on 4 of 4 runs, mirrored frame flagged on
+4 of 4 with the correct objects.
+
 ## Measured on real footage
 
 Five real 3-minute takes of one desk, shot on Ray-Ban Meta glasses. Ground truth set by the
@@ -89,7 +125,8 @@ glasses ──► take.mp4 ──► ingest ──► frames + manifest
 | `pipeline/compare.py` | Diffs takes on comparable fields, and separates a camera move from props actually moving. A prop moving is local; a camera moving is global. |
 | `pipeline/load_clickhouse.py` | Schema and an idempotent loader. Replaces a scene's rows rather than appending: duplicates would corrupt the majority counts every finding rests on. |
 | `pipeline/ask.py` | The agent. Hands the official `mcp-clickhouse` server to Gemini as a tool and lets it plan: inspect the schema, decide what to select, run it, read the rows, answer. |
-| `web/` | The hosted surface, pre-loaded so a judge with no glasses can use it. |
+| `pipeline/live.py` | The rolling check. One frame against a reference take's state, asked as a closed question rather than an open description, because that is both faster and far more accurate. Stateless, because a check that needs the previous frame cannot survive a dropped connection and sets drop connections. |
+| `web/` | The hosted surface, pre-loaded so a judge with no glasses can use it. `/` is the report, `/live` is the rolling check. |
 
 ### The agent is real, and it shows its work
 
