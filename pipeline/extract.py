@@ -30,6 +30,11 @@ import sys
 from dataclasses import dataclass, asdict
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+
+from pipeline.store import load_env  # noqa: E402
+
 # The SDK warns about automatic function calling on every generate_content call. We do not
 # use function calling, the warning is not actionable, and it lands on stderr in the middle
 # of output a judge is reading. Suppressed rather than left as noise.
@@ -59,6 +64,37 @@ HORIZONTAL = ["left", "center", "right", "offscreen"]
 DEPTH = ["foreground", "midground", "background", "unknown"]
 CATEGORIES = ["prop", "wardrobe", "set", "actor"]
 
+# Continuity is mostly not about position. A prop sliding across a table is the toy case.
+# What actually ruins a cut is STATE: a jacket buttoned in the wide and open in the close,
+# sleeves rolled in one take and down in the next, a glass that refills itself between
+# setups, a cigarette that grows back. Those are the errors that end up on a blooper list.
+#
+# Free text cannot carry them. Across five takes of one desk the same mug came back as
+# "upright", "on napkin" and "placed on table": one fact, three strings, and a diff over
+# that manufactures breaks out of synonyms. So state gets the same treatment position got,
+# a fixed vocabulary, and the free-text description survives only for display.
+STATE_CLASSES = [
+    "fill_level",    # the classic self-refilling glass
+    "fastening",     # buttons, zips, laces
+    "sleeves",       # rolled or down
+    "open_closed",   # doors, drawers, laptops, books
+    "worn",          # on the body or taken off
+    "held",          # and crucially, in WHICH hand
+    "power",         # screens and lamps on or off
+    "none",          # nothing about this object can meaningfully change
+]
+
+STATE_VALUES = [
+    "full", "half", "empty",
+    "buttoned", "unbuttoned", "partly_fastened",
+    "rolled", "down",
+    "open", "closed",
+    "worn", "removed",
+    "left_hand", "right_hand", "both_hands", "not_held",
+    "on", "off",
+    "unknown", "na",
+]
+
 SYSTEM_PROMPT = """\
 You are a script supervisor's assistant on a film set. You are looking at frames sampled \
 from a single take.
@@ -74,9 +110,20 @@ would use in another take of the same scene. "coffee mug", not "the mug of coffe
 - Only record what you can actually see. If you cannot tell whether the jacket is \
 buttoned, set the attribute to "unknown" rather than guessing. A wrong continuity record \
 is worse than a missing one, because someone will trust it.
-- Record the state that could plausibly CHANGE between takes: position, contents, \
-open/closed, on/off, worn/removed, held in which hand. Do not record permanent properties \
-like "the table is wooden".
+- Record the state that could plausibly CHANGE between takes, and record it TWICE: once as \
+short free text in `state`, and once as the controlled pair `state_class` + `state_value`. \
+The controlled pair is what gets compared across takes, so it matters more than the prose.
+- Choose `state_class` by what could realistically change about that object. A glass or mug \
+is `fill_level`. A shirt or jacket is `fastening`, or `sleeves` when the sleeves are the \
+visible thing. A door, drawer, book or laptop is `open_closed`. Anything a person is \
+holding is `held`, and say WHICH hand. A screen or lamp is `power`. A watch, hat or jacket \
+being on the body at all is `worn`. Use `none` with value `na` only when nothing about the \
+object can meaningfully change, such as a wall.
+- Continuity errors are far more often about state than about position. A mug sliding \
+across a table is rare. A glass that refills itself between takes, a jacket buttoned in one \
+and open in the next, a prop that swaps hands: those are the errors that reach the screen. \
+Give state your attention.
+- Do not record permanent properties like "the table is wooden".
 - If an entity moves during the take, report where it is for the majority of the take and \
 set moved_during_take to true.
 - Be exhaustive about props and wardrobe. Those are what continuity errors are made of.
@@ -100,7 +147,17 @@ RESPONSE_SCHEMA = {
                     "depth": {"type": "string", "enum": DEPTH},
                     "state": {
                         "type": "string",
-                        "description": "Short normalized state, e.g. 'full', 'empty', 'open', 'buttoned', 'held in right hand', 'unknown'.",
+                        "description": "Short free-text state, for a human reading the report. Not compared.",
+                    },
+                    "state_class": {
+                        "type": "string",
+                        "enum": STATE_CLASSES,
+                        "description": "Which KIND of change this object can undergo. 'none' if it cannot meaningfully change.",
+                    },
+                    "state_value": {
+                        "type": "string",
+                        "enum": STATE_VALUES,
+                        "description": "The value within that class right now. 'na' when state_class is 'none', 'unknown' when you cannot tell.",
                     },
                     "relative_to": {
                         "type": "string",
@@ -115,6 +172,8 @@ RESPONSE_SCHEMA = {
                     "position_h",
                     "depth",
                     "state",
+                    "state_class",
+                    "state_value",
                     "moved_during_take",
                     "confidence",
                 ],
@@ -132,6 +191,8 @@ class Observation:
     position_h: str
     depth: str
     state: str
+    state_class: str
+    state_value: str
     relative_to: str
     moved_during_take: bool
     confidence: float
@@ -255,6 +316,8 @@ def extract_take_state(
             position_h=o["position_h"],
             depth=o["depth"],
             state=o["state"].strip().lower(),
+            state_class=o.get("state_class", "none"),
+            state_value=o.get("state_value", "na"),
             relative_to=o.get("relative_to", "").strip().lower(),
             moved_during_take=bool(o["moved_during_take"]),
             confidence=float(o["confidence"]),
@@ -278,6 +341,9 @@ def main() -> int:
     parser.add_argument("--scene-context", default=None, help="e.g. 'INT. KITCHEN - DAY, scene 4'")
     parser.add_argument("--out", type=Path, default=None, help="where to write the state json")
     args = parser.parse_args()
+
+    # Pick up .env so a fresh clone with credentials filled in just works.
+    load_env()
 
     # Setup problems (no key, no SDK, empty manifest) are the normal first experience for
     # anyone cloning this, including a judge. They get a sentence, not a stack trace.

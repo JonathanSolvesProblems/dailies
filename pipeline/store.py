@@ -29,6 +29,8 @@ class Observation:
     position_h: str
     depth: str
     state: str
+    state_class: str
+    state_value: str
     relative_to: str
     moved_during_take: bool
     confidence: float
@@ -153,6 +155,8 @@ class JsonStore:
                         position_h=obs.get("position_h", ""),
                         depth=obs.get("depth", ""),
                         state=obs.get("state", ""),
+                        state_class=obs.get("state_class", "none"),
+                        state_value=obs.get("state_value", "na"),
                         relative_to=obs.get("relative_to", ""),
                         moved_during_take=bool(obs.get("moved_during_take", False)),
                         confidence=float(obs.get("confidence", 0.0)),
@@ -184,6 +188,8 @@ CREATE TABLE IF NOT EXISTS observations
     position_h         LowCardinality(String),
     depth              LowCardinality(String),
     state              String,
+    state_class        LowCardinality(String),
+    state_value        LowCardinality(String),
     relative_to        String,
     moved_during_take  UInt8,
     confidence         Float32,
@@ -223,6 +229,8 @@ def observation_rows(scene_id: str, observations: list[Observation]) -> list[lis
             o.position_h,
             o.depth,
             o.state,
+            o.state_class,
+            o.state_value,
             o.relative_to,
             1 if o.moved_during_take else 0,
             o.confidence,

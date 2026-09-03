@@ -10,9 +10,15 @@ situation as "upright", "on table" and "placed on table" in the free-text state 
 Those do not compare, and pretending they do would manufacture continuity breaks that are
 really just synonyms.
 
-So the diff runs on the normalized fields only (presence, position_h, depth) and carries
-state along for display. A field that cannot be compared reliably is worse than no field,
-because a false continuity flag costs a crew real time chasing nothing.
+So the diff runs on the normalized fields only (presence, position_h, depth, state_value)
+and carries the free-text state along for display. A field that cannot be compared reliably
+is worse than no field, because a false continuity flag costs a crew real time chasing
+nothing.
+
+`state_value` was added to that list once it became an enum. It is the field that matters
+most: a prop sliding across a table is the rare case, while a jacket buttoned in one take
+and open in the next, a glass that refills itself, or a prop that swaps hands, are the
+errors that actually reach the screen.
 """
 
 from __future__ import annotations
@@ -25,7 +31,13 @@ from pathlib import Path
 
 # Fields whose values come from a fixed vocabulary and can therefore be compared across
 # takes. Anything not in here is descriptive only.
-COMPARABLE_FIELDS = ("position_h", "depth")
+#
+# state_value earns its place here now that it is an enum rather than prose. It is also the
+# field that matters most: continuity errors are far more often a jacket coming unbuttoned
+# or a glass refilling itself than a prop sliding across a table. The free-text `state`
+# stays out, because "upright" / "on napkin" / "placed on table" were one fact in three
+# strings and comparing them manufactured breaks that did not exist.
+COMPARABLE_FIELDS = ("position_h", "depth", "state_value")
 
 # Below this, the model was unsure enough that a mismatch is more likely to be a bad read
 # than a real continuity break.

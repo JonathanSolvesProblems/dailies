@@ -27,6 +27,11 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+
+from pipeline.store import load_env  # noqa: E402
+
 logging.getLogger("google_genai").setLevel(logging.ERROR)
 logging.getLogger("google_genai.models").setLevel(logging.ERROR)
 
@@ -217,6 +222,9 @@ def main() -> int:
     parser.add_argument("--model", default=DEFAULT_MODEL)
     parser.add_argument("--out", type=Path, default=None, help="default: <state_dir>/reconciled")
     args = parser.parse_args()
+
+    # Pick up .env so a fresh clone with credentials filled in just works.
+    load_env()
 
     try:
         states = load_states(args.state_dir)

@@ -206,9 +206,24 @@ async def ask_async(question: str, scene_id: str | None = None, model: str = DEF
                         calls = [p.function_call for p in candidate_parts if getattr(p, "function_call", None)]
 
                         if not calls:
+                            answer = (response.text or "").strip()
+                            try:
+                                from pipeline.telemetry import Run, record
+                                record(Run(
+                                    operation="ask",
+                                    model=candidate,
+                                    latency_ms=0,
+                                    outcome="ok",
+                                    scene_id=scene_id or "",
+                                    findings=len(queries),
+                                    queries=queries,
+                                    detail=question,
+                                ))
+                            except Exception:
+                                pass
                             return AskResult(
                                 question=question,
-                                answer=(response.text or "").strip(),
+                                answer=answer,
                                 queries=queries,
                                 model=candidate,
                             )

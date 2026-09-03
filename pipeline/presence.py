@@ -28,6 +28,11 @@ import os
 import sys
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+
+from pipeline.store import load_env  # noqa: E402
+
 logging.getLogger("google_genai").setLevel(logging.ERROR)
 logging.getLogger("google_genai.models").setLevel(logging.ERROR)
 
@@ -223,6 +228,12 @@ def run(state_dir: Path, manifest_dir: Path, model: str = DEFAULT_MODEL) -> dict
                         "position_h": check.get("position_h", "center"),
                         "depth": check.get("depth", "unknown"),
                         "state": (check.get("state") or "present").strip().lower(),
+                        # A recovered observation is a sighting, not a state reading. The
+                        # presence check answers "is it there", so claiming to know whether
+                        # a jacket is buttoned would be inventing detail the pass never
+                        # looked for. Unknown state is excluded from the diff by design.
+                        "state_class": "none",
+                        "state_value": "unknown",
                         "relative_to": "",
                         "moved_during_take": False,
                         "confidence": float(check.get("confidence", 0.5)),
@@ -273,6 +284,9 @@ def main() -> int:
     )
     parser.add_argument("--model", default=DEFAULT_MODEL)
     args = parser.parse_args()
+
+    # Pick up .env so a fresh clone with credentials filled in just works.
+    load_env()
 
     manifest_dir = args.manifests or args.state_dir.parent
 

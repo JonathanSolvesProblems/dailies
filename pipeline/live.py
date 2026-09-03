@@ -26,23 +26,17 @@ from dataclasses import dataclass, asdict, field
 
 logging.getLogger("google_genai").setLevel(logging.ERROR)
 
-# Flash, not flash-lite, and the reason is worth keeping.
+# Flash-Lite is disqualified on RECALL, not speed, and that is worth keeping in front of
+# whoever next tries to make this faster.
 #
-# Lite benchmarked about ten times faster on this exact call: 979ms median against
-# 5-15s. It was chosen on that basis, and then an adversarial test killed it. Given a
-# horizontally mirrored frame, in which every object on the desk is on the wrong side,
-# lite reported "laptop, monitor, coffee mug, and microphone are in their expected
-# positions". Not low confidence. Not a partial catch. It did not see a fully mirrored
-# room. Flash, on the same frame, flagged the mug, microphone, mouse and mousepad at 0.95
-# each and named the swap.
+# Lite benchmarked about ten times faster on this exact call: 979ms against 5-15s. It was
+# chosen on that basis, then an adversarial test killed it. Given a horizontally mirrored
+# frame, every object on the desk on the wrong side, lite reported "laptop, monitor, coffee
+# mug, and microphone are in their expected positions". Not low confidence, not a partial
+# catch: it did not see a fully mirrored room. Flash flagged four objects at 0.95 and named
+# the swap. The speed was an artefact of not looking, and a detector with no recall is a
+# green light wired to nothing.
 #
-# The speed was not a tradeoff, it was an artefact of not looking. A detector with no
-# recall is not a fast detector, it is a green light wired to nothing, and on a set that
-# is worse than no tool at all because someone will trust it.
-#
-# So: flash, and the check interval absorbs the latency instead. A take runs well over
-# thirty seconds, so a check every few seconds still catches a break inside the take,
-# which is the whole requirement.
 # 3.5, not 3.6, and not lite. Recall and latency measured together, 3 runs per side,
 # control frame (must stay silent) and mirrored frame (must flag):
 #
@@ -84,8 +78,13 @@ Rules:
   camera moves; the objects have not necessarily moved with it.
 - Position is judged relative to the other objects in frame, not to the frame edges,
   because the wearer's head moves constantly and the frame edges move with it.
-- Ignore the wearer's own body: hands, sleeves, and anything held by the person wearing the
-  camera are not set continuity.
+- STATE matters more than position. A prop sliding across a table is the rare error. What
+  actually ruins a cut is a glass at a different level, a jacket buttoned in one take and
+  open in the next, sleeves rolled then down, a door that changed, or a prop that swapped
+  hands. Check those first and hardest.
+- Wardrobe ON THE PERSON BEING FILMED is continuity and must be reported. Wardrobe on the
+  person WEARING the camera is not: their own hands and sleeves drift through frame
+  constantly and are not the scene.
 - Ignore lighting, focus, motion blur and exposure. Those are not continuity.
 - Be conservative. Interrupting a take is expensive. Report only what you would be willing
   to stop the camera for, and set confidence honestly.
@@ -147,17 +146,27 @@ class LiveCheck:
 def reference_summary(observations: list[dict]) -> str:
     """Flatten a reference take's state into the smallest thing worth sending.
 
-    Only the comparable fields go. Free-text state is left out on purpose: across takes of
+    Only the controlled fields go. Free-text state is left out on purpose: across takes of
     an identical scene the same mug was described 'upright', 'on napkin' and 'placed on
     table', and feeding that back as an expectation manufactures divergences out of
     synonyms, which is the exact failure the batch pipeline had to be fixed for.
+
+    The controlled state pair DOES go, because it is the half that matters. Telling the
+    model only where things were would leave it unable to see the errors that actually
+    reach the screen: the glass that refilled, the jacket that came unbuttoned, the prop
+    that changed hands.
     """
     lines = []
     for obs in observations:
         if obs.get("category") == "actor":
             continue
         rel = f", by the {obs['relative_to']}" if obs.get("relative_to") else ""
-        lines.append(f"- {obs['entity']}: {obs.get('position_h', '?')}{rel}")
+        state_class = obs.get("state_class", "none")
+        state_value = obs.get("state_value", "na")
+        state = ""
+        if state_class not in ("none", "", None) and state_value not in ("na", "unknown", "", None):
+            state = f", {state_class}={state_value}"
+        lines.append(f"- {obs['entity']}: {obs.get('position_h', '?')}{rel}{state}")
     return "\n".join(lines)
 
 
@@ -217,13 +226,29 @@ async def check_frame_async(
                 for d in payload.get("divergences", [])
                 if float(d.get("confidence", 0)) >= MIN_CONFIDENCE
             ]
-            return LiveCheck(
+            result = LiveCheck(
                 ok=not divergences,
                 divergences=divergences,
                 frame_note=payload.get("frame_note", ""),
                 model=candidate,
                 latency_ms=int((time.perf_counter() - started) * 1000),
             )
+            # Fire-and-forget. A crew is waiting on this answer; bookkeeping does not get
+            # to slow it down or break it.
+            try:
+                from pipeline.telemetry import Run, record
+                record(Run(
+                    operation="live_check",
+                    model=candidate,
+                    latency_ms=result.latency_ms,
+                    outcome="divergence" if divergences else "holds",
+                    findings=len(divergences),
+                    entities=[d.entity for d in divergences],
+                    detail=result.frame_note,
+                ))
+            except Exception:
+                pass
+            return result
         except Exception as exc:
             if "503" not in str(exc) and "429" not in str(exc):
                 raise
