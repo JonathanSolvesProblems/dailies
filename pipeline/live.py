@@ -85,6 +85,13 @@ Rules:
 - Wardrobe ON THE PERSON BEING FILMED is continuity and must be reported. Wardrobe on the
   person WEARING the camera is not: their own hands and sleeves drift through frame
   constantly and are not the scene.
+- `held` is the one reference field that is a snapshot rather than a settled fact. The
+  reference records the take as a whole, but an actor picks a prop up and puts it down many
+  times inside one take, so at any given instant it may simply be resting. Report a `held`
+  divergence ONLY when the prop is in a DIFFERENT HAND than the reference says. A prop the
+  reference lists as held that is currently sitting on the table is NOT a divergence, and
+  neither is the reverse. The error that ruins a cut is the phone that changed hands between
+  takes, never the hand being momentarily empty.
 - Ignore lighting, focus, motion blur and exposure. Those are not continuity.
 - Be conservative. Interrupting a take is expensive. Report only what you would be willing
   to stop the camera for, and set confidence honestly.
