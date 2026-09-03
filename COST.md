@@ -14,24 +14,43 @@ Reproduce with `python pipeline/measure.py --scene out/scene_a`.
 
 ## Measured
 
-Real extraction calls against real footage, `gemini-3.6-flash`, 2026-09-03:
+Every successful extraction call against real footage, `gemini-3.6-flash`, 2026-09-03.
+Seven calls over four distinct takes, run twice where the quota allowed:
 
-| take | input tokens | output tokens | latency | cost |
+| take | input | output | latency | cost |
 |---|---|---|---|---|
 | take_001 | 9,414 | 2,381 | 16.1s | $0.01599 |
+| take_001 | 9,414 | 2,466 | 105s † | $0.01631 |
 | take_002 | 8,037 | 1,880 | 10.8s | $0.01308 |
+| take_002 | 8,037 | 1,328 | 18.4s | $0.01101 |
 | take_003 | 11,647 | 1,985 | 11.5s | $0.01618 |
-| **mean** | **9,699** | **2,082** | **12.8s** | **$0.01508** |
-
-n=3, not 5. Takes 004 and 005 returned `429 RESOURCE_EXHAUSTED` against a free-tier quota,
-and two earlier attempts hit `503`. That is a quota limit, not a property of the workload,
-but three samples is what was actually measured so three is what is reported.
+| take_003 | 11,647 | 1,432 | 10.1s | $0.01411 |
+| take_004 | 11,645 | 2,400 | 987s † | $0.01773 |
+| **mean** | **9,977** | **1,982** | **11.5s** ‡ | **$0.01491** |
 
 At the current promotional rate of $0.75 / $3.75 per million tokens:
 
-    9,699 / 1e6 x $0.75  +  2,082 / 1e6 x $3.75  =  $0.0151 per take
+    9,977 / 1e6 x $0.75  +  1,982 / 1e6 x $3.75  =  $0.0149 per take
 
-**About one and a half cents per take.**
+**About one and a half cents per take**, ranging $0.011 to $0.018.
+
+† **Contaminated, by my own mistake.** I left one measurement process running and started a
+second against the same free-tier quota. Those two calls were queued behind the other
+process, not doing 105 and 987 seconds of work. They are listed rather than deleted because
+removing an inconvenient sample silently is how a measurement becomes a claim, but they say
+nothing about the workload.
+
+‡ Median of the five uncontended calls (10.1, 10.8, 11.5, 16.1, 18.4s). The token counts
+from the contaminated calls are unaffected, since queueing does not change what was sent, so
+all seven count toward cost.
+
+Take 005 never completed: `429 RESOURCE_EXHAUSTED` on every attempt.
+
+**Output length is not stable at temperature 0.** The same take produced 1,880 and 1,328
+output tokens on two runs, a 42% spread, and take_003 varied 39%. Input is byte-identical
+every time; the model's answer length simply varies. So per-take cost is a distribution, not
+a constant, and a single sample would have been an anecdote. This is the main reason the
+table above lists every call instead of one run.
 
 ## The comparison
 
@@ -66,7 +85,7 @@ what the industry pays for the day it protects. Both are checkable without trust
 
 - **The promotional rate expires.** Gemini 3.6 Flash is $0.75 / $3.75 through 2026-12-31 and
   rises to $1.50 / $7.50 on 2027-01-01. After that the same measurement is **$0.030 per
-  take** and $1.21 per 40-take day, still 0.08% of the cheapest shoot day.
+  take** and $1.19 per 40-take day, still 0.08% of the cheapest shoot day.
 - **The live check is a different model on a different budget.** `live.py` runs
   `gemini-3.5-flash`, which is $1.50 / $9.00, chosen for latency rather than price: 3.6
   Flash measured 11.3s against 3.5 Flash's 3.7s at identical recall, and a continuity check
