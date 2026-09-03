@@ -15,8 +15,12 @@ $URL     = "https://dailies-564641829203.us-east1.run.app"
 
 # A short, unique string from the newest change. If it is not on the live URL afterwards,
 # the deploy did not take effect no matter what the build said.
-$MARKER = "minmax(0, 1fr)"
-$MARKER_PATH = "/live"
+#
+# Update this whenever you ship something whose absence would be invisible. A marker left
+# pointing at an old change still passes while the new one is missing, which is the exact
+# failure this script exists to catch.
+$MARKER = "odd-state"
+$MARKER_PATH = "/"
 
 Write-Host "`n=== uncommitted work? ===" -ForegroundColor Cyan
 $dirty = git status --porcelain

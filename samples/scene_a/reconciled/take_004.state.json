@@ -1,13 +1,15 @@
 {
   "take_id": "take_004",
-  "scene_summary": "A person works at a desk using a laptop and smartphone, navigating web pages and videos.",
+  "scene_summary": "An actor uses a laptop and smartphone at a home office desk set up with a microphone, monitor, and headphones.",
   "observations": [
     {
       "entity": "laptop",
       "category": "prop",
       "position_h": "center",
       "depth": "foreground",
-      "state": "open",
+      "state": "open and powered on",
+      "state_class": "open_closed",
+      "state_value": "open",
       "relative_to": "desk",
       "moved_during_take": false,
       "confidence": 0.95
@@ -17,8 +19,10 @@
       "category": "prop",
       "position_h": "center",
       "depth": "foreground",
-      "state": "held in hands",
-      "relative_to": "laptop",
+      "state": "held in both hands early in take before being put down",
+      "state_class": "held",
+      "state_value": "both_hands",
+      "relative_to": "actor",
       "moved_during_take": true,
       "confidence": 0.9
     },
@@ -27,7 +31,9 @@
       "category": "prop",
       "position_h": "left",
       "depth": "midground",
-      "state": "mounted on stand",
+      "state": "mounted on stand on desk",
+      "state_class": "none",
+      "state_value": "na",
       "relative_to": "desk",
       "moved_during_take": false,
       "confidence": 0.95
@@ -38,6 +44,8 @@
       "position_h": "left",
       "depth": "foreground",
       "state": "resting on desk",
+      "state_class": "none",
+      "state_value": "na",
       "relative_to": "desk",
       "moved_during_take": false,
       "confidence": 0.9
@@ -47,18 +55,22 @@
       "category": "prop",
       "position_h": "right",
       "depth": "midground",
-      "state": "upright",
+      "state": "sitting on desk",
+      "state_class": "fill_level",
+      "state_value": "unknown",
       "relative_to": "desk",
       "moved_during_take": false,
-      "confidence": 0.9
+      "confidence": 0.88
     },
     {
       "entity": "computer monitor",
       "category": "prop",
       "position_h": "center",
       "depth": "background",
-      "state": "powered off",
-      "relative_to": "laptop",
+      "state": "powered off behind laptop",
+      "state_class": "power",
+      "state_value": "off",
+      "relative_to": "desk",
       "moved_during_take": false,
       "confidence": 0.95
     },
@@ -68,25 +80,14 @@
       "position_h": "center",
       "depth": "foreground",
       "state": "supporting objects",
+      "state_class": "none",
+      "state_value": "unknown",
       "relative_to": "",
       "moved_during_take": false,
       "confidence": 0.95,
       "via": "presence_check",
       "seen_at_timestamp": 25.768,
-      "where_in_frame": "The light wooden surface supporting the laptop, microphone, and monitor across the center and bottom of the frame."
-    },
-    {
-      "entity": "mousepad",
-      "category": "prop",
-      "position_h": "right",
-      "depth": "midground",
-      "state": "resting on desk",
-      "relative_to": "",
-      "moved_during_take": false,
-      "confidence": 0.9,
-      "via": "presence_check",
-      "seen_at_timestamp": 128.838,
-      "where_in_frame": "On the far right edge of the wooden desk surface, partially visible next to the mug."
+      "where_in_frame": "Light wood desk surface extending across the lower half of the frame supporting the laptop, microphone, and other objects."
     }
   ],
   "model": "gemini-3.6-flash",

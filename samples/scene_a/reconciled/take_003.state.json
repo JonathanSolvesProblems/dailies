@@ -1,85 +1,89 @@
 {
   "take_id": "take_003",
-  "scene_summary": "A person works at a desk with a laptop, interacting with a smartphone, mouse, and watching videos.",
+  "scene_summary": "A person works at a home office desk, checking a smartphone before browsing on a laptop in front of an unpowered monitor.",
   "observations": [
     {
       "entity": "laptop",
       "category": "prop",
       "position_h": "center",
       "depth": "foreground",
-      "state": "open",
+      "state": "open and powered on",
+      "state_class": "open_closed",
+      "state_value": "open",
       "relative_to": "desk",
       "moved_during_take": false,
-      "confidence": 1.0
+      "confidence": 0.95
     },
     {
       "entity": "computer monitor",
-      "category": "set",
+      "category": "prop",
       "position_h": "center",
       "depth": "background",
-      "state": "off",
+      "state": "powered off",
+      "state_class": "power",
+      "state_value": "off",
       "relative_to": "desk",
       "moved_during_take": false,
-      "confidence": 1.0
-    },
-    {
-      "entity": "microphone",
-      "category": "prop",
-      "position_h": "left",
-      "depth": "midground",
-      "state": "on stand",
-      "relative_to": "desk",
-      "moved_during_take": false,
-      "confidence": 1.0
+      "confidence": 0.95
     },
     {
       "entity": "coffee mug",
       "category": "prop",
       "position_h": "right",
       "depth": "midground",
-      "state": "on napkin",
+      "state": "partially full",
+      "state_class": "fill_level",
+      "state_value": "half",
       "relative_to": "desk",
       "moved_during_take": false,
-      "confidence": 1.0
+      "confidence": 0.9
     },
     {
       "entity": "computer mouse",
       "category": "prop",
       "position_h": "right",
       "depth": "foreground",
-      "state": "on mousepad",
-      "relative_to": "mousepad",
+      "state": "resting on mousepad",
+      "state_class": "held",
+      "state_value": "not_held",
+      "relative_to": "desk",
       "moved_during_take": true,
-      "confidence": 1.0
+      "confidence": 0.9
     },
     {
-      "entity": "mousepad",
+      "entity": "microphone",
       "category": "prop",
-      "position_h": "right",
-      "depth": "foreground",
-      "state": "flat on desk",
+      "position_h": "left",
+      "depth": "midground",
+      "state": "mounted on desk stand",
+      "state_class": "none",
+      "state_value": "na",
       "relative_to": "desk",
       "moved_during_take": false,
-      "confidence": 1.0
+      "confidence": 0.95
     },
     {
       "entity": "smartphone",
       "category": "prop",
-      "position_h": "center",
+      "position_h": "right",
       "depth": "foreground",
-      "state": "held in hands",
-      "relative_to": "actor",
+      "state": "held with both hands then laid on desk",
+      "state_class": "held",
+      "state_value": "not_held",
+      "relative_to": "desk",
       "moved_during_take": true,
-      "confidence": 0.9
+      "confidence": 0.85
     },
     {
       "entity": "headphones",
       "category": "prop",
       "position_h": "left",
       "depth": "foreground",
-      "state": "resting on desk",
+      "state": "resting off the ears on desk",
+      "state_class": "worn",
+      "state_value": "removed",
       "relative_to": "desk",
-      "moved_during_take": true,
+      "moved_during_take": false,
       "confidence": 0.9
     },
     {
@@ -87,15 +91,17 @@
       "category": "prop",
       "position_h": "center",
       "depth": "foreground",
-      "state": "stationary, supporting objects",
+      "state": "stationary, supporting laptop and mug",
+      "state_class": "none",
+      "state_value": "unknown",
       "relative_to": "",
       "moved_during_take": false,
-      "confidence": 0.98,
+      "confidence": 0.95,
       "via": "presence_check",
       "seen_at_timestamp": 0.033,
-      "where_in_frame": "The wooden desk surface is visible across the frame supporting the laptop, mug, mousepad, and monitor."
+      "where_in_frame": "The wooden desk surface supporting the laptop, mousepad, and mug."
     }
   ],
-  "model": "gemini-3.5-flash",
+  "model": "gemini-3.6-flash",
   "frames_used": 10
 }

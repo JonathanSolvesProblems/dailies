@@ -510,12 +510,17 @@ function renderScale(entities, takeIds) {
     row.appendChild(el("div", "label",
       `<span class="name">${esc(e.entity)}</span><span class="kind">${esc(e.category)}</span>`));
 
-    const counts = {};
+    const counts = {}, stateCounts = {};
     takeIds.forEach(id => {
       const c = e.per_take[id];
-      if (c) counts[c.position_h] = (counts[c.position_h] || 0) + 1;
+      if (!c) return;
+      counts[c.position_h] = (counts[c.position_h] || 0) + 1;
+      if (c.state_value && !["na", "unknown", ""].includes(c.state_value)) {
+        stateCounts[c.state_value] = (stateCounts[c.state_value] || 0) + 1;
+      }
     });
     const mark = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
+    const stateMark = Object.entries(stateCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
 
     for (const id of takeIds) {
       const c = e.per_take[id];
@@ -523,10 +528,17 @@ function renderScale(entities, takeIds) {
         row.appendChild(el("div", "cell gone", `<span class="p">gone</span>`));
         continue;
       }
-      const off = c.position_h !== mark;
+      // State beats depth as the second line whenever the object has a state worth
+      // reading. Depth is the noisy axis, the one that moves when the wearer leans back;
+      // state is where continuity errors actually live, so it earns the space.
+      const hasState = c.state_value && !["na", "unknown", ""].includes(c.state_value);
+      const second = hasState ? c.state_value : c.depth;
+      const offPos = c.position_h !== mark;
+      const offState = hasState && c.state_value !== stateMark;
       const anchor = c.via === "presence_check" ? `<span class="anchor">anchored</span>` : "";
-      row.appendChild(el("div", `cell${off ? " off" : ""}`,
-        `<span class="p">${esc(c.position_h)}</span><span class="d">${esc(c.depth)}</span>${anchor}`));
+      row.appendChild(el("div", `cell${offPos || offState ? " off" : ""}`,
+        `<span class="p">${esc(c.position_h)}</span>` +
+        `<span class="d${offState ? " odd-state" : ""}">${esc(second)}</span>${anchor}`));
     }
     wrap.appendChild(row);
   }

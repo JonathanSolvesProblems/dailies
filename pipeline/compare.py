@@ -39,6 +39,23 @@ from pathlib import Path
 # strings and comparing them manufactured breaks that did not exist.
 COMPARABLE_FIELDS = ("position_h", "depth", "state_value")
 
+# Values that mean "no reading", per field. A take holding one of these is EXCLUDED from
+# that field's comparison rather than counted as a value.
+#
+# Found the moment state_value went live: the mug came back `unknown` in four takes, where
+# the model could not see into it, and `half` in the one take where it could. The diff
+# dutifully reported four-against-one and called it a likely break. Nothing had changed;
+# the model had simply been honest about not knowing four times.
+#
+# Treating "I could not tell" as a value turns absence of evidence into evidence of change,
+# which is the same mistake the presence pass exists to prevent one layer down. The honest
+# reading of a field that was unknown in one take is that it contributes nothing there.
+NON_COMPARABLE_VALUES = {
+    "state_value": {"unknown", "na", ""},
+    "depth": {"unknown", ""},
+    "position_h": {""},
+}
+
 # Below this, the model was unsure enough that a mismatch is more likely to be a bad read
 # than a real continuity break.
 MIN_CONFIDENCE = 0.4
@@ -140,7 +157,16 @@ def compare(states: dict[str, dict]) -> tuple[list[Delta], list[MissingEntity]]:
             continue
 
         for field in COMPARABLE_FIELDS:
-            values = {take: per_take[take].get(field, "") for take in present}
+            ignorable = NON_COMPARABLE_VALUES.get(field, {""})
+            values = {
+                take: per_take[take].get(field, "")
+                for take in present
+                if per_take[take].get(field, "") not in ignorable
+            }
+            # One reading is not a disagreement. If only a single take could see the fill
+            # level, there is nothing to compare it against.
+            if len(values) < 2:
+                continue
             distinct = set(values.values())
             if len(distinct) <= 1:
                 continue
@@ -161,6 +187,21 @@ def compare(states: dict[str, dict]) -> tuple[list[Delta], list[MissingEntity]]:
             )
 
     deltas, shifts = _split_camera_shifts(deltas)
+
+    # Depth survives only as evidence of a CAMERA move, never as a claim about one prop.
+    #
+    # Across every run of this project, a per-object depth delta has been a false positive
+    # without exception: the mug and the microphone "moving" between foreground and
+    # midground because the wearer leaned in, the whole desk shifting because they sat
+    # back. From a head-mounted camera, depth is a property of where the operator's head is
+    # rather than where the object is, so a single object changing depth carries no
+    # information about the object at all.
+    #
+    # It is still worth measuring, because SEVERAL objects moving together is a real and
+    # useful fact: it tells the crew the framing changed. _split_camera_shifts has already
+    # extracted that above. What is left over is noise, and it is dropped here rather than
+    # shown to someone who would have to learn to ignore it.
+    deltas = [d for d in deltas if d.field != "depth"]
 
     # Loudest first: a single outlier against a clear majority is what a crew wants to see.
     order = {"likely break": 0, "possible break": 1, "unstable reading": 2}

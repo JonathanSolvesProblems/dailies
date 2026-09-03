@@ -145,6 +145,8 @@ def get_entities(scene_id: str):
             "position_h": obs.position_h,
             "depth": obs.depth,
             "state": obs.state,
+            "state_class": obs.state_class,
+            "state_value": obs.state_value,
             "confidence": obs.confidence,
             "via": obs.via,
         }

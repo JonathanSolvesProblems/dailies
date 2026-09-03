@@ -1,13 +1,27 @@
 {
   "take_id": "take_002",
-  "scene_summary": "A first-person perspective of a person working at a home office desk with a laptop, microphone, headphones, and a coffee mug.",
+  "scene_summary": "A person operates an open laptop at a desk featuring a computer monitor, microphone, coffee mug, and headphones.",
   "observations": [
     {
       "entity": "laptop",
       "category": "prop",
       "position_h": "center",
       "depth": "foreground",
-      "state": "open and active",
+      "state": "open with screen powered on",
+      "state_class": "open_closed",
+      "state_value": "open",
+      "relative_to": "desk",
+      "moved_during_take": false,
+      "confidence": 0.95
+    },
+    {
+      "entity": "computer monitor",
+      "category": "prop",
+      "position_h": "center",
+      "depth": "background",
+      "state": "screen powered off",
+      "state_class": "power",
+      "state_value": "off",
       "relative_to": "desk",
       "moved_during_take": false,
       "confidence": 0.95
@@ -17,37 +31,33 @@
       "category": "prop",
       "position_h": "right",
       "depth": "midground",
-      "state": "on napkin",
+      "state": "sitting on napkin with unknown fill level",
+      "state_class": "fill_level",
+      "state_value": "unknown",
       "relative_to": "desk",
       "moved_during_take": false,
-      "confidence": 0.95
+      "confidence": 0.9
     },
     {
       "entity": "microphone",
       "category": "prop",
       "position_h": "left",
       "depth": "midground",
-      "state": "on stand",
+      "state": "mounted on desk stand",
+      "state_class": "none",
+      "state_value": "na",
       "relative_to": "desk",
       "moved_during_take": false,
       "confidence": 0.95
-    },
-    {
-      "entity": "computer monitor",
-      "category": "set",
-      "position_h": "center",
-      "depth": "background",
-      "state": "powered off",
-      "relative_to": "desk",
-      "moved_during_take": false,
-      "confidence": 0.9
     },
     {
       "entity": "headphones",
       "category": "prop",
       "position_h": "left",
       "depth": "foreground",
-      "state": "lying on desk",
+      "state": "resting on desk",
+      "state_class": "none",
+      "state_value": "na",
       "relative_to": "desk",
       "moved_during_take": false,
       "confidence": 0.9
@@ -57,48 +67,41 @@
       "category": "prop",
       "position_h": "right",
       "depth": "foreground",
-      "state": "on mousepad",
-      "relative_to": "mousepad",
-      "moved_during_take": true,
-      "confidence": 0.9
-    },
-    {
-      "entity": "mousepad",
-      "category": "prop",
-      "position_h": "right",
-      "depth": "foreground",
-      "state": "flat on desk",
+      "state": "resting on mousepad, not held for majority of take",
+      "state_class": "held",
+      "state_value": "not_held",
       "relative_to": "desk",
       "moved_during_take": false,
       "confidence": 0.9
     },
     {
       "entity": "desk",
-      "category": "prop",
+      "category": "set",
       "position_h": "center",
-      "depth": "foreground",
-      "state": "stationary",
+      "depth": "midground",
+      "state": "wooden desk surface",
+      "state_class": "none",
+      "state_value": "na",
       "relative_to": "",
       "moved_during_take": false,
-      "confidence": 1.0,
-      "via": "presence_check",
-      "seen_at_timestamp": 25.774,
-      "where_in_frame": "The wooden surface supporting the laptop, microphone, and other items, occupying the lower half of the frame."
+      "confidence": 0.95
     },
     {
       "entity": "smartphone",
       "category": "prop",
       "position_h": "right",
       "depth": "foreground",
-      "state": "stationary",
+      "state": "lying flat on desk",
+      "state_class": "none",
+      "state_value": "unknown",
       "relative_to": "",
       "moved_during_take": false,
       "confidence": 0.95,
       "via": "presence_check",
       "seen_at_timestamp": 103.095,
-      "where_in_frame": "On the bottom right of the frame, lying flat on the desk next to the purple mousepad."
+      "where_in_frame": "on the desk to the right of the purple mousepad in the lower right area"
     }
   ],
-  "model": "gemini-3.5-flash",
+  "model": "gemini-3.6-flash",
   "frames_used": 7
 }
