@@ -153,6 +153,30 @@ def get_entities(scene_id: str):
     return sorted(entities.values(), key=lambda e: e["entity"])
 
 
+def _explain(exc: BaseException, _depth: int = 0) -> str:
+    """Flatten an exception into something that names the actual cause.
+
+    The MCP client runs its stdio transport inside an anyio task group, so anything that
+    fails underneath surfaces as `ExceptionGroup: unhandled errors in a TaskGroup (1
+    sub-exception)`. That string is the same whether ClickHouse refused the password, the
+    subprocess died, or the model was rate limited, which makes a 500 from this endpoint
+    impossible to act on. It cost a debugging session to learn that the hard way.
+
+    Both the group's children and the `__cause__` chain are walked, because the useful
+    detail is usually one or two levels below whatever reached the handler.
+    """
+    if _depth > 4:
+        return type(exc).__name__
+    inner = list(getattr(exc, "exceptions", None) or [])
+    if inner:
+        return " | ".join(_explain(e, _depth + 1) for e in inner[:3])
+    text = f"{type(exc).__name__}: {exc}".strip().rstrip(":")
+    cause = exc.__cause__ or exc.__context__
+    if cause is not None and cause is not exc:
+        return f"{text} <- {_explain(cause, _depth + 1)}"
+    return text
+
+
 class Question(BaseModel):
     question: str
     scene_id: str | None = None
@@ -178,7 +202,7 @@ async def ask_question(q: Question):
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}") from exc
+        raise HTTPException(status_code=500, detail=_explain(exc)) from exc
 
     return result.to_dict()
 
