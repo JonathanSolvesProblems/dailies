@@ -7,7 +7,11 @@
 #
 #   .\deploy.ps1
 
-$ErrorActionPreference = "Stop"
+# Deliberately NOT "Stop". gcloud writes its normal build progress to stderr, and with
+# ErrorActionPreference=Stop PowerShell turns that into a terminating error and kills the
+# deploy mid-flight. Native exit codes are checked explicitly instead, which is the only
+# thing that actually indicates failure here.
+$ErrorActionPreference = "Continue"
 $SERVICE = "dailies"
 $REGION  = "us-east1"
 $PROJECT = "warden-agent-supervisor"
@@ -36,6 +40,11 @@ $env:CLOUDSDK_CORE_DISABLE_PROMPTS = "1"
 gcloud run deploy $SERVICE --source . --region $REGION --project $PROJECT `
   --allow-unauthenticated --memory 1Gi --cpu 2 --timeout 300 `
   --min-instances 1 --max-instances 3 2>&1 | Select-Object -Last 3
+
+if ($LASTEXITCODE -ne 0) {
+  Write-Host "`n  gcloud exited $LASTEXITCODE. Deploy did not complete." -ForegroundColor Red
+  exit 1
+}
 
 Write-Host "`n=== verifying the RUNNING url, not the build log ===" -ForegroundColor Cyan
 foreach ($p in @("/", "/live", "/api/health", "/api/capabilities")) {
