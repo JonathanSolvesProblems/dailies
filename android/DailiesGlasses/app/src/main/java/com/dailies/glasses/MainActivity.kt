@@ -13,6 +13,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -220,7 +222,10 @@ fun RollScreen(vm: RollViewModel) {
             Text("REFERENCE", color = InkDim, fontSize = 10.sp,
                 fontFamily = FontFamily.Monospace, letterSpacing = 2.sp)
             Spacer(Modifier.height(8.dp))
-            Row(Modifier.horizontalScrollable(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(
+                Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
                 ui.availableTakes.forEach { take ->
                     val selected = take == ui.referenceTake
                     Text(
@@ -230,7 +235,7 @@ fun RollScreen(vm: RollViewModel) {
                         modifier = Modifier
                             .background(if (selected) Well else Raised, RoundedCornerShape(2.dp))
                             .border(1.dp, if (selected) Accent else Engrave, RoundedCornerShape(2.dp))
-                            .clickableSafe(enabled = !ui.rolling) { vm.pickReference(take) }
+                            .clickable(enabled = !ui.rolling) { vm.pickReference(take) }
                             .padding(horizontal = 14.dp, vertical = 7.dp)
                     )
                 }
@@ -321,10 +326,3 @@ private fun linkStatus(link: Link) = when (link) {
     Link.Ready -> "camera live"
     Link.Error -> "error"
 }
-
-private fun Modifier.horizontalScrollable(): Modifier = this
-
-private fun Modifier.clickableSafe(enabled: Boolean, onClick: () -> Unit): Modifier =
-    this.then(
-        androidx.compose.foundation.clickable(enabled = enabled) { onClick() }
-    )
