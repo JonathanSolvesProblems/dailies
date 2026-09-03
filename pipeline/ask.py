@@ -42,6 +42,13 @@ FALLBACK_MODELS = ["gemini-3.5-flash", "gemini-2.5-flash"]
 # again. Bounded so a model that gets stuck in a loop costs one slow request, not a bill.
 MAX_TOOL_TURNS = 6
 
+# Tries per model before falling through to the next one. A question that needs several tool
+# turns makes several model calls, so it meets several chances to catch a transient 503; with
+# a single try each, the whole chain could exhaust in seconds and report every model down
+# when nothing was actually wrong.
+ATTEMPTS_PER_MODEL = 3
+RETRY_BACKOFF_S = 2.0
+
 SYSTEM_PROMPT = """\
 You answer questions about a film shoot, using a ClickHouse database of what was observed in
 each take.
@@ -205,84 +212,101 @@ async def ask_async(question: str, scene_id: str | None = None, model: str = DEF
             # calling, which fails here with "cannot pickle _asyncio.Future". Explicit is
             # better anyway: every step the model takes is visible and capturable, and
             # "which queries did it decide to run" is answerable rather than opaque.
-            contents = [types.Content(role="user", parts=[types.Part.from_text(text=prompt)])]
-            queries: list[str] = []
-            used_model = model
+            async def one_attempt(candidate: str) -> AskResult:
+                """Run the whole tool conversation once, on one model.
 
-            for candidate in [model] + [m for m in FALLBACK_MODELS if m != model]:
-                try:
-                    used_model = candidate
-                    for _ in range(MAX_TOOL_TURNS):
-                        response = await client.aio.models.generate_content(
-                            model=candidate,
-                            contents=contents,
-                            config=types.GenerateContentConfig(
-                                system_instruction=SYSTEM_PROMPT,
-                                tools=tools,
-                                temperature=0.0,
-                            ),
-                        )
-                        candidate_parts = response.candidates[0].content.parts or []
-                        calls = [p.function_call for p in candidate_parts if getattr(p, "function_call", None)]
+                A fresh conversation every time on purpose: a half-finished tool exchange
+                cannot be resumed against a new call, and replaying the old turns would
+                count each query twice in the result.
+                """
+                contents = [types.Content(role="user", parts=[types.Part.from_text(text=prompt)])]
+                queries: list[str] = []
 
-                        if not calls:
-                            answer = (response.text or "").strip()
-                            try:
-                                from pipeline.telemetry import Run, record
-                                record(Run(
-                                    operation="ask",
-                                    model=candidate,
-                                    latency_ms=0,
-                                    outcome="ok",
-                                    scene_id=scene_id or "",
-                                    findings=len(queries),
-                                    queries=queries,
-                                    detail=question,
-                                ))
-                            except Exception:
-                                pass
-                            return AskResult(
-                                question=question,
-                                answer=answer,
-                                queries=queries,
-                                model=candidate,
-                            )
-
-                        contents.append(response.candidates[0].content)
-                        reply_parts = []
-                        for call in calls:
-                            args = dict(call.args or {})
-                            sql = args.get("query") or args.get("sql")
-                            queries.append(
-                                str(sql).strip() if sql else f"-- {call.name}({', '.join(args)})"
-                            )
-                            try:
-                                result = await session.call_tool(call.name, args)
-                                output = _result_to_text(result)
-                            except Exception as exc:
-                                # Hand the failure back so the model can correct its own SQL
-                                # instead of the whole request dying on one bad guess.
-                                output = f"ERROR: {exc}"
-                            reply_parts.append(
-                                types.Part.from_function_response(
-                                    name=call.name, response={"result": output[:20000]}
-                                )
-                            )
-                        contents.append(types.Content(role="user", parts=reply_parts))
-
-                    return AskResult(
-                        question=question,
-                        answer="Ran out of tool turns before reaching an answer.",
-                        queries=queries,
+                for _ in range(MAX_TOOL_TURNS):
+                    response = await client.aio.models.generate_content(
                         model=candidate,
+                        contents=contents,
+                        config=types.GenerateContentConfig(
+                            system_instruction=SYSTEM_PROMPT,
+                            tools=tools,
+                            temperature=0.0,
+                        ),
                     )
-                except Exception as exc:
-                    if "503" not in str(exc) and "429" not in str(exc):
-                        raise
-                    contents = [types.Content(role="user", parts=[types.Part.from_text(text=prompt)])]
-                    queries = []
+                    candidate_parts = response.candidates[0].content.parts or []
+                    calls = [p.function_call for p in candidate_parts if getattr(p, "function_call", None)]
 
-            raise RuntimeError(f"Every model was unavailable while answering. ({used_model})")
+                    if not calls:
+                        answer = (response.text or "").strip()
+                        try:
+                            from pipeline.telemetry import Run, record
+                            record(Run(
+                                operation="ask",
+                                model=candidate,
+                                latency_ms=0,
+                                outcome="ok",
+                                scene_id=scene_id or "",
+                                findings=len(queries),
+                                queries=queries,
+                                detail=question,
+                            ))
+                        except Exception:
+                            pass
+                        return AskResult(
+                            question=question, answer=answer, queries=queries, model=candidate
+                        )
+
+                    contents.append(response.candidates[0].content)
+                    reply_parts = []
+                    for call in calls:
+                        args = dict(call.args or {})
+                        sql = args.get("query") or args.get("sql")
+                        queries.append(
+                            str(sql).strip() if sql else f"-- {call.name}({', '.join(args)})"
+                        )
+                        try:
+                            result = await session.call_tool(call.name, args)
+                            output = _result_to_text(result)
+                        except Exception as exc:
+                            # Hand the failure back so the model can correct its own SQL
+                            # instead of the whole request dying on one bad guess.
+                            output = f"ERROR: {exc}"
+                        reply_parts.append(
+                            types.Part.from_function_response(
+                                name=call.name, response={"result": output[:20000]}
+                            )
+                        )
+                    contents.append(types.Content(role="user", parts=reply_parts))
+
+                return AskResult(
+                    question=question,
+                    answer="Ran out of tool turns before reaching an answer.",
+                    queries=queries,
+                    model=candidate,
+                )
+
+            # Each model gets more than one go before the chain moves on. A harder question
+            # spends several turns in the tool loop, so it meets several more chances to hit a
+            # transient 503 than a simple one does, and with a single try per model the whole
+            # chain could fall through in seconds and report every model unavailable when
+            # nothing was really down. Retrying the same model after a short wait is what
+            # recovers: pipeline/measure.py hit the same 503s and cleared them on retry.
+            for candidate in [model] + [m for m in FALLBACK_MODELS if m != model]:
+                for attempt in range(ATTEMPTS_PER_MODEL):
+                    try:
+                        return await one_attempt(candidate)
+                    except Exception as exc:
+                        text = str(exc)
+                        if "503" not in text and "429" not in text:
+                            raise
+                        if attempt < ATTEMPTS_PER_MODEL - 1:
+                            await asyncio.sleep(RETRY_BACKOFF_S * (2 ** attempt))
+
+            raise RuntimeError(
+                "The model API was rate limited or unavailable on every attempt "
+                f"({', '.join([model] + [m for m in FALLBACK_MODELS if m != model])}, "
+                f"{ATTEMPTS_PER_MODEL} tries each). This is upstream capacity, not a fault "
+                "in the query. Try again in a moment."
+            )
 
 
 def ask(question: str, scene_id: str | None = None, model: str = DEFAULT_MODEL) -> AskResult:

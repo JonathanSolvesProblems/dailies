@@ -177,6 +177,29 @@ def _explain(exc: BaseException, _depth: int = 0) -> str:
     return text
 
 
+def _find(exc: BaseException, kind: type, _depth: int = 0) -> BaseException | None:
+    """Search an exception, its group children and its cause chain for a given type.
+
+    `except RuntimeError` does not catch a RuntimeError raised inside an anyio task group,
+    because what propagates is an ExceptionGroup wrapping it. The ask path raises RuntimeError
+    to mean "upstream is rate limited, this is not the server's fault", which should be a 503;
+    it was reaching the client as a 500 because the isinstance check never saw past the
+    wrapper.
+    """
+    if _depth > 4:
+        return None
+    if isinstance(exc, kind):
+        return exc
+    for sub in list(getattr(exc, "exceptions", None) or []):
+        found = _find(sub, kind, _depth + 1)
+        if found is not None:
+            return found
+    cause = exc.__cause__ or exc.__context__
+    if cause is not None and cause is not exc:
+        return _find(cause, kind, _depth + 1)
+    return None
+
+
 class Question(BaseModel):
     question: str
     scene_id: str | None = None
@@ -199,9 +222,12 @@ async def ask_question(q: Question):
 
     try:
         result = await ask_async(q.question.strip(), q.scene_id)
-    except RuntimeError as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:
+        # Look inside the task group before deciding the status. Upstream being rate limited
+        # is a 503 the caller can retry, not a 500 that says the app is broken.
+        upstream = _find(exc, RuntimeError)
+        if upstream is not None:
+            raise HTTPException(status_code=503, detail=str(upstream)) from exc
         raise HTTPException(status_code=500, detail=_explain(exc)) from exc
 
     return result.to_dict()
