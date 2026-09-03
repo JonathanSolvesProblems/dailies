@@ -134,6 +134,26 @@ def _clean_schema(schema: dict) -> dict:
     return out
 
 
+def _tool_schema(tool) -> dict:
+    """The tool's parameter schema, whatever this version of `mcp` calls it.
+
+    The field is `inputSchema` up to mcp 1.27 and `input_schema` after. Reading only the
+    camelCase name took the deployed service down with
+
+        AttributeError: 'Tool' object has no attribute 'inputSchema'
+
+    while every local run passed, because the local environment had 1.27.1 and the container
+    built `mcp>=1.29.0` fresh from an unpinned requirement. Nothing in the repo was wrong;
+    the two environments were simply not the same one. Requirements are pinned now, and this
+    reads whichever name is present so a future rename fails soft rather than at runtime.
+    """
+    for attr in ("inputSchema", "input_schema"):
+        schema = getattr(tool, attr, None)
+        if schema:
+            return dict(schema)
+    return {"type": "object"}
+
+
 def _mcp_tools_to_genai(mcp_tools, types):
     """Translate the MCP server's advertised tools into Gemini function declarations."""
     declarations = []
@@ -142,7 +162,7 @@ def _mcp_tools_to_genai(mcp_tools, types):
             types.FunctionDeclaration(
                 name=tool.name,
                 description=(tool.description or "")[:1024],
-                parameters=_clean_schema(dict(tool.inputSchema or {"type": "object"})),
+                parameters=_clean_schema(_tool_schema(tool)),
             )
         )
     return [types.Tool(function_declarations=declarations)]

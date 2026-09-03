@@ -1,14 +1,37 @@
-# Google Cloud AI SDK. The only model provider used, and the only one permitted.
-google-genai>=2.18.0
+# Pinned deliberately, not for tidiness.
+#
+# These were open ranges (`mcp>=1.29.0`) until the deployed service began returning 500 on
+# /api/ask, the one endpoint the ClickHouse track is judged on, while every local run passed.
+# The cause was drift, not code: the container resolved a fresh `mcp` 2.1.1, which renamed
+# `Tool.inputSchema` to `Tool.input_schema`, while the local venv sat on 1.29.0 with the old
+# name. An open-ended range is what let a tested environment and a deployed one stop being
+# the same environment between a green test and a deploy.
+#
+# Two defences, because either alone would have failed:
+#   - `pipeline/ask.py` reads whichever field name is present, so the rename cannot break it
+#   - these pins, so a version change is a diff someone chose rather than a surprise that
+#     arrives with the next build
+#
+# fastmcp is pinned even though nothing here imports it. mcp-clickhouse depends on it
+# (`fastmcp>=2.0.0,<3.0.0`), it pulls `mcp` transitively, and that is precisely the kind of
+# indirect dependency that moves underneath a range without anyone choosing it.
+#
+# Verified working together, end to end against live ClickHouse Cloud, 2026-09-03.
+# Upgrading `mcp` past 1.x also requires a newer mcp-clickhouse: 0.4.1 imports `McpError`,
+# which mcp 2.x renamed to `MCPError`, so the pair moves together or not at all.
 
-# The ClickHouse partner integration. mcp-clickhouse is the official server and is
-# launched as a subprocess over stdio; mcp is the client half that talks to it.
-mcp>=1.29.0
-mcp-clickhouse>=0.4.1
+# Google Cloud AI SDK. The only model provider used, and the only one permitted.
+google-genai==2.20.0
+
+# The ClickHouse partner integration. mcp-clickhouse is the official server, launched as a
+# subprocess over stdio; mcp is the client half that talks to it.
+mcp==1.29.0
+mcp-clickhouse==0.4.1
+fastmcp==2.14.1
 
 # Web app: the hosted surface judges test.
-fastapi>=0.115.0
-uvicorn[standard]>=0.30.0
+fastapi==0.136.1
+uvicorn[standard]==0.47.0
 
 # Also required when running the capture pipeline locally (not needed by the web app):
 #   ffmpeg and ffprobe on PATH  (frame sampling, https://ffmpeg.org/download.html)
