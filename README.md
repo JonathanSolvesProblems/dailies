@@ -13,8 +13,20 @@ Built for [Agentic Cinema](https://agentic-cinema.devpost.com/), ClickHouse trac
 
 Continuity is the job of making sure takes can be cut together: the mug on the same side
 of the table, the jacket buttoned the same way, the phone in the same hand. It is tracked
-by hand, on paper, take after take, and when it goes wrong nobody finds out until the edit,
-when fixing it costs a day of crew.
+by hand, on paper, take after take, and when it goes wrong nobody finds out until the edit.
+
+By then it is not an edit problem. It is a pickup day. A published survey of US production
+markets prices a 6-person, 10-hour shoot day at
+[$1,440 in the cheapest market and $3,020 in the most expensive](https://giggster.com/guide/reports/film-shoot-costs-major-us-cities-2026/).
+
+Dailies watches a take for **1.5 cents**, measured on real footage against
+[Google's published rates](https://ai.google.dev/gemini-api/docs/pricing). A whole 40-take
+day costs about **60 cents**, or 0.04% of the day it is guarding.
+
+Neither number is mine. Google meters the tokens and sets the price; the industry sets the
+day rate. The workings are in [COST.md](COST.md), reproducible with
+`python pipeline/measure.py`. What is deliberately *not* claimed anywhere here is a count of
+reshoots prevented, because that would be my own code marking its own homework.
 
 Every other tool in this space starts from the screenplay PDF. This one starts from the set.
 
