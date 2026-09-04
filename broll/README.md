@@ -11,4 +11,5 @@ Suggested layout:
     broll/screen/      screen recordings of the report and the rolling view
 
 The one shot the whole video needs: press Roll, move the thing, and let the pause be real
-before the verdict lands. It answers in about five seconds. Do not cut that silence out.
+before the verdict lands. It answers in about two seconds. Do not cut that beat out: the pause between the
+change and the verdict is the shot.

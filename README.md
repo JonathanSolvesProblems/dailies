@@ -83,15 +83,37 @@ hands full. These glasses have no display, so a verdict spoken into the ear is n
 consolation prize for missing hardware; it is the only delivery that works on a set. That is
 also why the rolling check has to answer inside a take rather than at wrap.
 
-**Latency: 4.2s median, 5.2s p90**, measured over twelve runs against a warm instance, and
-re-measured at 4.15s median after the move to Vertex AI, so the change of billing door did
-not change the number. Both figures are warm-instance: the first call after a cold start took
-182s while Cloud Run built the container's first Vertex credential, which is a real thing a
-judge could hit and is worth one throwaway request before recording anything. So
-the claim is "catches it inside the take", not "instant". A take runs well over thirty
-seconds, so several checks land while the camera is still rolling, which is the whole
-requirement. Checks run sequentially rather than on a fixed timer; polling faster than the
-answer arrives just stacks requests until the queue collapses.
+**Latency: 2.2s median, 2.8s p90**, measured over eight consecutive checks against the
+deployed service, with the negative control quiet on all eight. A take runs well over thirty
+seconds, so a dozen or more checks land while the camera is still rolling.
+
+That number was 16.4s two hours before this was written, and the way down is worth recording
+because neither cause was where it looked:
+
+| | median |
+|---|---|
+| after the move to Vertex AI | 16.4s |
+| building the Gemini client once instead of per frame | 9.3s |
+| turning off thinking, recall re-tested | **2.2s** |
+
+The first was invisible for a while because the service's own timing said the delay was
+inside the model call, which pointed at Vertex having got slower. It had not: the identical
+request issued directly still answered in four seconds. `make_client()` ran per request, and
+on Vertex that performs credential discovery, which on Cloud Run is a metadata-server round
+trip for a service-account token. The API-key path has no such step, so the cost only
+appeared once the credential changed. Nothing had got slower except how often the service was
+asking who it was.
+
+The second is in `pipeline/live.py` with its measurements attached. Thinking was disabled only
+after the control-and-mirror test showed recall unchanged, which is the check Flash-Lite
+failed.
+
+One caveat that matters for recording a demo: these are warm-instance figures. The first call
+after a cold start once took 182 seconds while the container built its first Vertex
+credential. Send one throwaway request before rolling.
+
+Checks run sequentially rather than on a fixed timer; polling faster than the answer arrives
+just stacks requests until the queue collapses.
 
 ### Choosing the model by measuring recall and latency together
 
@@ -123,7 +145,10 @@ the number, so the lever is the model rather than the pixels. Note 3.6 at 384px 
 *slower* than at 512px: that is server-side variance, and a good argument for measuring a
 configuration rather than reasoning about it.
 
-Confirmed at twelve runs after the switch: 0 false alarms, 6 of 6 caught, 4.2s median.
+Confirmed at twelve runs after the switch: 0 false alarms, 6 of 6 caught, 4.2s median. That
+4.2s was the figure with thinking still on and a client built per request; both were fixed
+later and the check now runs at 2.2s median. The model comparison above is unaffected, since
+both models were measured under the same conditions as each other.
 
 Flash-Lite benchmarked about ten times faster on this exact call, 979ms against 5-15s, and
 was chosen on that basis. Then it was handed a horizontally mirrored frame, every object on
