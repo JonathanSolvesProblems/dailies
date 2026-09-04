@@ -144,16 +144,23 @@ Verified after the change: control frame silent on 4 of 4 runs, mirrored frame f
 Five real 3-minute takes of one desk, shot on Ray-Ban Meta glasses. Ground truth set by the
 operator: **nothing was deliberately moved between takes.**
 
-A naive extract-and-diff reported **8 differences, 7 of them fake**. Three passes, each
-added because of a defect measured on this footage rather than anticipated, bring that to
-**4 findings with no false alarms**:
+A naive extract-and-diff reported **8 differences, 7 of them fake**. Four passes, each added
+because of a defect measured on this footage rather than anticipated, bring that to
+**6 findings with no false alarms**:
 
 | Stage | Findings | Fake |
 |---|---|---|
 | Naive extract + diff | 8 | 7 |
 | + vocabulary reconciliation | 5 | 4 |
 | + presence check | 6 | 3 |
-| + camera-shift detection | **4** | **0** |
+| + camera-shift detection | 4 | 0 |
+| + state vocabulary | **6** | **0** |
+
+The last row adds findings rather than removing them, which is the point of it. Reconciling,
+presence and camera-shift all exist to delete false alarms; giving the model a controlled
+state vocabulary instead of free text let it report two things it had been seeing all along
+and had no way to say. Both are real: the mouse is held in take_001 and resting in the other
+three, and the phone is in both hands in take_004 and untouched in take_003.
 
 What survives is real, and nothing was told to look for any of it:
 
@@ -164,11 +171,18 @@ What survives is real, and nothing was told to look for any of it:
 [gone]        computer mouse   absent from take_004
 [gone]        smartphone       absent from take_005
 [off mark]    smartphone       right in takes 1-2, center in takes 3-4
+[state]       computer mouse   held=right_hand in take_001, resting in 002/003/005
+[state]       smartphone       held=both_hands in take_004, not held in take_003
 ```
 
 The mouse is genuinely gone from take 4 because both hands were holding a phone. The phone
 is genuinely gone from take 5. And it genuinely moved from the desk to being held up
 between takes 2 and 3.
+
+The two `[state]` lines are the same story told from the other side: the reason the mouse
+vanishes in take_004 is the reason the phone is in both hands in take_004. A facing page that
+records only presence and position cannot say that, which is exactly why the state vocabulary
+was added.
 
 ## The pipeline
 
