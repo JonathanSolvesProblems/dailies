@@ -29,6 +29,7 @@ if someone "tidies" the location to match the Cloud Run region.
 from __future__ import annotations
 
 import os
+from functools import lru_cache
 
 
 def use_vertex() -> bool:
@@ -47,10 +48,32 @@ def vertex_project() -> str | None:
     )
 
 
-def make_client():
-    """A configured genai client, Vertex first, API key second."""
+@lru_cache(maxsize=4)
+def _build(mode: str, project: str | None, location: str | None, api_key: str | None):
+    """Construct one client per distinct configuration, then reuse it.
+
+    Cached because on Vertex, constructing a client is not free: it runs Application Default
+    Credentials discovery, which on Cloud Run means a round trip to the metadata server for a
+    service-account token. Building a fresh client per request paid that on every call, and
+    the live check builds one per frame.
+
+    The API-key path has no such cost, which is why this only became visible after the move to
+    Vertex: the rolling check went from about 4 seconds to about 16 against an unchanged model
+    and an unchanged prompt, while the identical request issued directly still answered in
+    four. Nothing had got slower except the number of times we asked who we were.
+
+    Keyed on the configuration rather than cached blindly, so changing the project, region or
+    credential still produces a new client instead of silently reusing the old one.
+    """
     from google import genai
 
+    if mode == "vertex":
+        return genai.Client(vertexai=True, project=project, location=location)
+    return genai.Client(api_key=api_key)
+
+
+def make_client():
+    """A configured genai client, Vertex first, API key second."""
     if use_vertex():
         project = vertex_project()
         if not project:
@@ -58,7 +81,7 @@ def make_client():
                 "DAILIES_USE_VERTEX is set but no project. Set DAILIES_VERTEX_PROJECT "
                 "(or GOOGLE_CLOUD_PROJECT) to the Google Cloud project that has billing."
             )
-        return genai.Client(vertexai=True, project=project, location=vertex_location())
+        return _build("vertex", project, vertex_location(), None)
 
     api_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
     if not api_key:
@@ -67,7 +90,7 @@ def make_client():
             "Credentials (gcloud auth application-default login), or set GOOGLE_API_KEY "
             "from https://aistudio.google.com/apikey"
         )
-    return genai.Client(api_key=api_key)
+    return _build("apikey", None, None, api_key)
 
 
 def describe() -> str:
