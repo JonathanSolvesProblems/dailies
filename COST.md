@@ -95,9 +95,10 @@ So the asymmetry, stated plainly:
 | | cost |
 |---|---|
 | one pickup day, cheapest US market | **$1,440** |
-| running a whole shoot day through Dailies | **$0.60** |
+| running a whole shoot day through Dailies | **$0.63** |
 
-The $0.60 assumes **40 takes in a day**, which is my assumption and not a sourced figure.
+The $0.63 assumes **40 takes in a day**, which is my assumption and not a sourced figure, and
+uses the Vertex AI measurement because that is the path the deployed service actually runs.
 The per-take number is the measured one; scale it to whatever a given production actually
 shoots. At 40 takes, the tool costs **0.04%** of the day it is guarding.
 
