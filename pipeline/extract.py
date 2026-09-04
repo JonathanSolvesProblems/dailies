@@ -225,7 +225,9 @@ def _load_client():
             "No API key found. Set GOOGLE_API_KEY or GEMINI_API_KEY.\n"
             "Get one at https://aistudio.google.com/apikey"
         )
-    return genai.Client(api_key=api_key)
+    from pipeline.client import make_client
+
+    return make_client()
 
 
 def _generate_with_fallback(client, primary_model: str, content, config):

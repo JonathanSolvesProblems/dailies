@@ -198,7 +198,9 @@ async def ask_async(question: str, scene_id: str | None = None, model: str = DEF
         raise RuntimeError("CLICKHOUSE_HOST is not set. Copy .env.example to .env.")
 
     prompt = question if not scene_id else f"For scene '{scene_id}': {question}"
-    client = genai.Client(api_key=api_key)
+    from pipeline.client import make_client
+
+    client = make_client()
 
     params = StdioServerParameters(command=_server_command(), args=[], env=_mcp_env())
 

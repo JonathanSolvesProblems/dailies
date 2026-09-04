@@ -113,7 +113,9 @@ def measure_extraction(manifest: Path, scene_context: str | None = None, attempt
     if not frames:
         raise ValueError(f"{manifest} has no frames")
 
-    client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
+    from pipeline.client import make_client
+
+    client = make_client()
     parts: list = [
         types.Part.from_text(
             text=f"Take '{data['take_id']}'. {len(frames)} frames across {data['duration_s']}s."

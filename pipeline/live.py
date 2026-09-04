@@ -194,7 +194,9 @@ async def check_frame_async(
     if not observations:
         raise ValueError("No reference state. Process a reference take first.")
 
-    client = genai.Client(api_key=api_key)
+    from pipeline.client import make_client
+
+    client = make_client()
 
     prompt = "REFERENCE TAKE recorded this:\n" + reference_summary(observations)
     if scene_context:
