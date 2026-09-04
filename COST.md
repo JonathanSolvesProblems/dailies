@@ -52,6 +52,35 @@ every time; the model's answer length simply varies. So per-take cost is a distr
 a constant, and a single sample would have been an anecdote. This is the main reason the
 table above lists every call instead of one run.
 
+## Re-measured after the move to Vertex AI
+
+The deployment now reaches Gemini through Vertex AI rather than an AI Studio API key, so the
+figures above were re-measured on the new path. Same three takes, same model, same day:
+
+| take | input | output | cost |
+|---|---|---|---|
+| take_001 | 10,017 | 2,062 | $0.01525 |
+| take_002 | 8,640 | 2,207 | $0.01476 |
+| take_003 | 12,250 | 2,178 | $0.01736 |
+| **mean** | **10,302** | **2,149** | **$0.01579** |
+
+**$0.0158 per take, 4.7% above the $0.0149 measured through the API key.** The headline is
+unchanged and a 40-take day is $0.63 rather than $0.60.
+
+The difference is real but is in the token counts, not the rates: Vertex reports about 600
+more input tokens per call for byte-identical input, consistently across all three takes,
+which is presumably how the system instruction is counted. Worth recording because it is the
+kind of gap that looks like a pricing change and is not.
+
+**What I could not verify.** Both of Google's pricing pages render their tables in a way this
+project's tooling could not read, so the $0.75 / $3.75 rate above is taken from the
+Gemini API rate card and applied to the Vertex figures on the assumption the promotional rate
+is common to both. One secondary source claims the Developer API is $1.50 / $7.50 while
+Vertex is $0.75 / $3.75, which contradicts Google's own page as read on 2026-09-03. If the
+higher rate is the correct one for either path, every figure here doubles: $0.032 per take
+and $1.26 per 40-take day, which is still 0.09% of the cheapest shoot day and does not change
+the argument. Check the rate card before quoting a precise figure anywhere it matters.
+
 ## The comparison
 
 The published survey prices a fixed 6-person, 10-hour shoot day, weighting 60% crew, 30%
