@@ -581,7 +581,15 @@ async function runAsk(question) {
     if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
 
     const n = el("div", "answer well");
-    n.appendChild(el("div", "text", esc(data.answer)));
+    const text = el("div", "text");
+    // The model answers in markdown, so "missing from **take_005**" was rendering with the
+    // asterisks showing. Escape first, then introduce tags of our own: by the time the bold
+    // pass runs, anything the model emitted is inert text, so the only HTML in the result is
+    // the two tags below.
+    text.innerHTML = esc(data.answer)
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/`([^`]+)`/g, "<code>$1</code>");
+    n.appendChild(text);
     if (data.queries?.length) {
       const sql = el("div", "sql");
       sql.appendChild(el("div", "cap",

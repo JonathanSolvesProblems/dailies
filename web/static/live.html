@@ -176,6 +176,7 @@ h2::before { content: ""; width: 3px; height: 12px; background: var(--accent); }
   </nav>
   <select id="scene" aria-label="Scene"></select>
   <select id="ref" aria-label="Reference take"></select>
+  <select id="cam-pick" aria-label="Camera" title="Camera"></select>
   <span class="spacer"></span>
   <span class="readout" id="stats" style="font-family:var(--mono);font-size:11px;color:var(--ink-faint)"></span>
   <button class="btn" id="roll">Roll</button>
@@ -225,6 +226,34 @@ async function api(p, opts) {
   return d;
 }
 
+// A frame with no light in it is not a frame, and this is the second time this project has
+// had to learn it. On this laptop, camera index 0 is a Windows Hello IR sensor that returns
+// pure black while every API call succeeds; detect.py already scans for a lit camera for
+// exactly that reason. The browser hits the same thing with a privacy shutter closed:
+// videoWidth is a healthy 1280, frames arrive on schedule, and every one of them is black.
+//
+// That is worse here than a blank preview, because the model is honest about it. Shown
+// nothing, it correctly reports that nothing contradicts the reference, and the UI turns that
+// into a green HOLDS. A continuity tool that says "all good" while blind is the precise
+// failure this project exists to avoid, and it is the one kind a user cannot catch by reading
+// the verdict, because the verdict looks right.
+//
+// So measure the frame before trusting it: mean luminance and spread, on a cheap subsample.
+// A lens cap, a closed shutter and an IR sensor all read near zero on both.
+function frameStats(canvas) {
+  const px = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data;
+  let sum = 0, sumSq = 0, n = 0;
+  for (let i = 0; i < px.length; i += 160) {   // every 40th pixel is plenty
+    const l = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2];
+    sum += l; sumSq += l * l; n++;
+  }
+  const mean = sum / n;
+  return { mean, sd: Math.sqrt(Math.max(0, sumSq / n - mean * mean)) };
+}
+
+const DARK_MEAN = 8;   // below this the image is essentially black
+const FLAT_SD = 3;     // and this flat means no detail, not merely a dim room
+
 function grabFrame() {
   const v = $("cam"), c = $("grab");
   if (!v.videoWidth) return null;
@@ -232,7 +261,9 @@ function grabFrame() {
   c.width = FRAME_W;
   c.height = Math.round(v.videoHeight * scale);
   c.getContext("2d").drawImage(v, 0, 0, c.width, c.height);
-  return c.toDataURL("image/jpeg", 0.72);
+  const { mean, sd } = frameStats(c);
+  if (mean < DARK_MEAN && sd < FLAT_SD) return { blank: true, mean, sd };
+  return { data: c.toDataURL("image/jpeg", 0.72), mean, sd };
 }
 
 function renderReference(flagged = new Set()) {
@@ -258,14 +289,27 @@ function logCheck(ms, divs) {
 }
 
 async function checkOnce() {
-  const frame = grabFrame();
-  if (!frame) return;
+  const grabbed = grabFrame();
+  if (!grabbed) return;
+
+  // Refuse to answer rather than answer about nothing. Sending a black frame costs a model
+  // call and comes back "nothing contradicts the reference", which reads as a pass.
+  if (grabbed.blank) {
+    $("state").className = "state idle";
+    $("state").textContent = "No image";
+    $("detail").textContent =
+      "The camera is delivering black frames. A privacy shutter, a lens cap, or an IR sensor " +
+      "picked instead of the webcam. Switch camera above. Not checking until there is a picture.";
+    $("note").textContent = `frame luminance ${grabbed.mean.toFixed(1)}, spread ${grabbed.sd.toFixed(1)}`;
+    return;
+  }
+
   try {
     const res = await api("/api/live/check", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        frame,
+        frame: grabbed.data,
         scene_id: $("scene").value,
         reference_take: $("ref").value,
         scene_context: null,
@@ -297,17 +341,90 @@ async function checkOnce() {
   }
 }
 
+let currentStream = null;
+
+function stopStream() {
+  if (currentStream) currentStream.getTracks().forEach(t => t.stop());
+  currentStream = null;
+}
+
+// Open one specific camera and wait for it to actually produce pixels. getUserMedia
+// resolving is not the same as the video element having a frame: read videoWidth too early
+// and a perfectly good camera reports 0.
+async function openCamera(deviceId) {
+  stopStream();
+  const constraints = {
+    video: deviceId
+      ? { deviceId: { exact: deviceId }, width: { ideal: 1280 } }
+      : { width: { ideal: 1280 }, facingMode: "environment" },
+    audio: false,
+  };
+  const stream = await navigator.mediaDevices.getUserMedia(constraints);
+  const v = $("cam");
+  v.srcObject = stream;
+  currentStream = stream;
+  await v.play().catch(() => {});
+  for (let i = 0; i < 30 && !v.videoWidth; i++) await new Promise(r => setTimeout(r, 100));
+  await new Promise(r => setTimeout(r, 250));  // let auto-exposure settle before judging it
+  return stream;
+}
+
+// Device labels are only exposed after permission is granted, which is why this runs after
+// the first getUserMedia rather than before it.
+async function listCameras(activeId) {
+  const sel = $("cam-pick");
+  let devices = [];
+  try {
+    devices = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput");
+  } catch { /* enumeration can fail; the picker just stays hidden */ }
+  sel.innerHTML = "";
+  devices.forEach((d, i) => {
+    const o = document.createElement("option");
+    o.value = d.deviceId;
+    o.textContent = d.label || `Camera ${i + 1}`;
+    if (d.deviceId === activeId) o.selected = true;
+    sel.appendChild(o);
+  });
+  sel.style.display = devices.length > 1 ? "" : "none";
+  return devices;
+}
+
+function activeCameraId() {
+  return currentStream?.getVideoTracks()[0]?.getSettings()?.deviceId;
+}
+
+// Try cameras until one delivers a lit picture, rather than trusting whichever answers first.
+//
+// This used to be facingMode:"environment" and nothing else, which on this laptop selects a
+// Windows Hello IR sensor: it opens without error, reports 1280x720, and streams pure black
+// forever. The rolling view then ran six checks against black frames and displayed HOLDS for
+// every one of them. Trusting the first camera that answers is the same mistake detect.py had
+// to stop making, for the same reason, on the same machine.
 async function start() {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { width: { ideal: 1280 }, facingMode: "environment" }, audio: false,
-    });
-    $("cam").srcObject = stream;
+    await openCamera(null);
   } catch (err) {
     $("state").className = "state idle";
     $("state").textContent = "No camera";
-    $("detail").textContent = err.message + " — a camera is required to roll.";
+    $("detail").textContent = err.message + ". A camera is required to roll.";
     return false;
+  }
+
+  const devices = await listCameras(activeCameraId());
+
+  if (grabFrame()?.blank && devices.length > 1) {
+    for (const d of devices) {
+      if (d.deviceId === activeCameraId()) continue;
+      try {
+        await openCamera(d.deviceId);
+        if (!grabFrame()?.blank) {
+          $("detail").textContent =
+            `Switched to ${d.label || "another camera"}: the first one was delivering black frames.`;
+          break;
+        }
+      } catch { /* try the next one */ }
+    }
+    await listCameras(activeCameraId());
   }
   return true;
 }
@@ -345,6 +462,27 @@ async function toggleRoll() {
   loop();
 }
 
+// Switching camera mid-roll is deliberate and does not stop the loop: the operator can hunt
+// for a working lens without losing the take. The loop grabs from the same video element, so
+// replacing the stream underneath it is all that is needed.
+$("cam-pick").onchange = async (e) => {
+  try {
+    await openCamera(e.target.value);
+    const f = grabFrame();
+    if (f?.blank) {
+      $("state").className = "state idle";
+      $("state").textContent = "No image";
+      $("detail").textContent = "That camera is delivering black frames. Try another.";
+    } else if (!rolling) {
+      $("state").className = "state idle";
+      $("state").textContent = "Standby";
+      $("detail").textContent = "Camera ready.";
+    }
+  } catch (err) {
+    $("detail").textContent = `Could not open that camera: ${err.message}`;
+  }
+};
+
 async function loadReference() {
   const d = await api(`/api/live/reference/${$("scene").value}?take_id=${$("ref").value}`);
   reference = d.observations;
@@ -366,7 +504,45 @@ async function boot() {
   $("ref").onchange = loadReference;
   $("roll").onclick = toggleRoll;
   await fillTakes();
+  warmUp();
 }
+
+// Spend the cold start here, at page load, instead of on the operator's first take.
+//
+// A cold container's first model call once took 182 seconds while it built its first Vertex
+// credential; every call after it took two. Silently making the user eat that on the shot they
+// are trying to record is the worst possible place for it, and the old advice ("send a
+// throwaway request first") only worked if you knew to do it.
+//
+// Reported rather than hidden, because a wait you can see is a different experience from one
+// you cannot. The Roll button stays live throughout: this is a courtesy, not a gate.
+async function warmUp() {
+  const s = $("state"), d = $("detail");
+  if (rolling) return;
+  s.className = "state idle";
+  s.textContent = "Waking";
+  d.textContent = "First call to the model on a cold container can take a minute. Doing it now so your first take does not.";
+  const t0 = performance.now();
+  const tick = setInterval(() => {
+    if (!rolling) d.textContent =
+      `Waking the service, ${((performance.now() - t0) / 1000).toFixed(0)}s. You can press Roll at any time.`;
+  }, 1000);
+  try {
+    const r = await api("/api/warm");
+    clearInterval(tick);
+    if (rolling) return;
+    s.textContent = "Standby";
+    d.textContent = r.warm
+      ? `Ready. Model answered in ${r.ms}ms via ${r.model}. Pick a reference take and press Roll.`
+      : `Model not reachable: ${r.detail || "unknown"}. The report view still works.`;
+  } catch (e) {
+    clearInterval(tick);
+    if (rolling) return;
+    s.textContent = "Standby";
+    d.textContent = `Could not reach the service: ${e.message}`;
+  }
+}
+
 boot().catch(e => { $("detail").textContent = e.message; });
 </script>
 </body>

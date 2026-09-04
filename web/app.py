@@ -72,6 +72,41 @@ def health():
     }
 
 
+@app.get("/api/warm")
+async def warm():
+    """Make the first model call so a person does not have to.
+
+    The first request after a cold start once took 182 seconds while the container built its
+    first Vertex credential, and every one after it took two. That is a terrible thing to
+    discover with a camera rolling, and /api/health does not help because it never touches the
+    model: it reads scenes off disk and returns instantly whether or not Gemini is reachable.
+
+    So this deliberately spends one real, tiny generation. It is the cheapest call the project
+    makes, and it moves the cold start off the demo and into page load, where a progress line
+    can explain it.
+    """
+    import time
+
+    from pipeline.client import describe, make_client
+
+    started = time.perf_counter()
+    try:
+        client = make_client()
+        client.models.generate_content(model="gemini-3.5-flash", contents="ok")
+        return {
+            "warm": True,
+            "ms": int((time.perf_counter() - started) * 1000),
+            "model": describe(),
+        }
+    except Exception as exc:
+        return {
+            "warm": False,
+            "ms": int((time.perf_counter() - started) * 1000),
+            "model": describe(),
+            "detail": _explain(exc),
+        }
+
+
 @app.get("/api/scenes")
 def list_scenes():
     return [to_dict(s) for s in store.list_scenes()]
