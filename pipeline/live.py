@@ -209,6 +209,23 @@ async def check_frame_async(
         response_mime_type="application/json",
         response_schema=RESPONSE_SCHEMA,
         temperature=0.0,
+        # Thinking off, and measured before switching rather than assumed, using the same
+        # control-and-mirror test that disqualified Flash-Lite. Three runs per cell:
+        #
+        #   thinking on   control 10.0s  mirrored  9.7s  0/3 false alarm  3/3 caught
+        #   budget 0      control  7.3s  mirrored  7.7s  0/3 false alarm  3/3 caught
+        #
+        # 27% faster at identical recall, including on the adversarial frame where every
+        # object is on the wrong side. That is the outcome the Flash-Lite experiment did NOT
+        # produce: lite was faster because it had stopped looking, and it missed a fully
+        # mirrored room. Here the model still catches it, so the saving is real rather than
+        # bought with recall.
+        #
+        # The reasoning holds for this call specifically: it is a closed question against a
+        # reference the model has already been handed, not an open one. If the prompt ever
+        # grows into something that needs deliberation, re-run the mirror test before
+        # trusting this line.
+        thinking_config=types.ThinkingConfig(thinking_budget=0),
     )
 
     started = time.perf_counter()
