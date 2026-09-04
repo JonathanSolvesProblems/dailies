@@ -37,12 +37,36 @@ Write-Host "  clean at $(git rev-parse --short HEAD)"
 
 Write-Host "`n=== deploying ===" -ForegroundColor Cyan
 $env:CLOUDSDK_CORE_DISABLE_PROMPTS = "1"
+
+# NO `2>&1` on gcloud, and the exit code is read on the very next line.
+#
+# This script twice lied about what happened, in opposite directions, and both faults came
+# from the same place.
+#
+# It originally piped `gcloud ... 2>&1 | Select-Object -Last 3`. In Windows PowerShell 5.1,
+# redirecting a NATIVE command's stderr wraps each line in an ErrorRecord (NativeCommandError)
+# rather than passing text through, and gcloud writes all of its ordinary progress to stderr.
+# The result was a deploy that reported "gcloud exited 1. Deploy did not complete." while the
+# revision had in fact gone live and was serving 100 percent of traffic. Before that, the same
+# `-Last 3` threw away a genuine build error and left only gcloud's generic
+# "run --run-diagnostics" footer.
+#
+# So: let stderr go to the console untouched, keep stdout for the log, and read $LASTEXITCODE
+# immediately, because any cmdlet in between can overwrite it.
+$log = Join-Path $env:TEMP "dailies-deploy.log"
 gcloud run deploy $SERVICE --source . --region $REGION --project $PROJECT `
   --allow-unauthenticated --memory 1Gi --cpu 2 --timeout 300 `
-  --min-instances 1 --max-instances 3 2>&1 | Select-Object -Last 3
+  --min-instances 1 --max-instances 3 | Tee-Object -FilePath $log
+$deployExit = $LASTEXITCODE
 
-if ($LASTEXITCODE -ne 0) {
-  Write-Host "`n  gcloud exited $LASTEXITCODE. Deploy did not complete." -ForegroundColor Red
+if ($deployExit -ne 0) {
+  Write-Host "`n  gcloud exited $deployExit. Deploy did not complete." -ForegroundColor Red
+  if (Test-Path $log) {
+    Write-Host "  Last 40 lines of stdout:" -ForegroundColor Red
+    Get-Content $log -Tail 40 | ForEach-Object { Write-Host "    $_" }
+    Write-Host "`n  Full log: $log" -ForegroundColor Red
+  }
+  Write-Host "  gcloud's own progress and errors are on the console above." -ForegroundColor Red
   exit 1
 }
 
