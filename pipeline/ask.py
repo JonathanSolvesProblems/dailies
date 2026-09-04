@@ -40,7 +40,11 @@ FALLBACK_MODELS = ["gemini-3.5-flash", "gemini-2.5-flash"]
 
 # Enough turns to inspect the schema, run a query, notice it asked the wrong thing and try
 # again. Bounded so a model that gets stuck in a loop costs one slow request, not a bill.
-MAX_TOOL_TURNS = 6
+# Raised from 6 after a question that had answered in two queries exhausted the budget on a
+# later run. The agent inspects the schema before it selects, so a cautious run spends turns
+# on list_tables and describe before the first real query, and 6 left almost no headroom. This
+# is a ceiling to stop runaway loops, not a target: most questions finish in two or three.
+MAX_TOOL_TURNS = 9
 
 # Tries per model before falling through to the next one. A question that needs several tool
 # turns makes several model calls, so it meets several chances to catch a transient 503; with
@@ -276,9 +280,35 @@ async def ask_async(question: str, scene_id: str | None = None, model: str = DEF
                         )
                     contents.append(types.Content(role="user", parts=reply_parts))
 
+                # Out of tool turns. Ask once more with the tools taken away, so the model has
+                # to answer from the rows it already has instead of reaching for another query.
+                #
+                # This used to return "Ran out of tool turns before reaching an answer", which
+                # is a dead end presented to whoever asked, and a non-deterministic one: the
+                # same question answered in two queries on one run and exhausted the budget on
+                # the next. By this point several real queries have usually come back and the
+                # answer is sitting in the transcript unread. Refusing to say it because a
+                # counter ran out is throwing away work the user already waited for.
+                contents.append(
+                    types.Content(
+                        role="user",
+                        parts=[types.Part.from_text(
+                            text="Stop querying and answer now, using only the rows above. "
+                                 "If they are not sufficient, say plainly what is missing."
+                        )],
+                    )
+                )
+                final = await client.aio.models.generate_content(
+                    model=candidate,
+                    contents=contents,
+                    config=types.GenerateContentConfig(
+                        system_instruction=SYSTEM_PROMPT, temperature=0.0
+                    ),
+                )
                 return AskResult(
                     question=question,
-                    answer="Ran out of tool turns before reaching an answer.",
+                    answer=(final.text or "").strip()
+                           or "Could not reach an answer from the rows returned.",
                     queries=queries,
                     model=candidate,
                 )
