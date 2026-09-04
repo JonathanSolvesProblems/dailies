@@ -295,12 +295,25 @@ def live_page():
 
 @app.get("/api/capabilities")
 def capabilities():
-    """What this deployment can actually do, so the UI never offers a dead control."""
+    """What this deployment can actually do, so the UI never offers a dead control.
+
+    Model access must be checked through the same helper the request path uses. This asked
+    only for an API key, which quietly became wrong the moment the deployment moved to Vertex
+    AI: with no key set the endpoint reported ask=false and the UI hid the question box, so
+    the one feature the ClickHouse track is judged on would have been invisible on a service
+    that could answer perfectly well. A capability probe that disagrees with the code it
+    describes is worse than no probe.
+    """
+    from pipeline.client import describe, use_vertex, vertex_project
+
+    model_ready = bool(
+        (use_vertex() and vertex_project())
+        or os.environ.get("GOOGLE_API_KEY")
+        or os.environ.get("GEMINI_API_KEY")
+    )
     return {
-        "ask": bool(
-            (os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY"))
-            and os.environ.get("CLICKHOUSE_HOST")
-        )
+        "ask": bool(model_ready and os.environ.get("CLICKHOUSE_HOST")),
+        "model": describe(),
     }
 
 

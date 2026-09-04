@@ -188,9 +188,6 @@ async def check_frame_async(
     from google import genai
     from google.genai import types
 
-    api_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        raise RuntimeError("No API key. Set GOOGLE_API_KEY.")
     if not observations:
         raise ValueError("No reference state. Process a reference take first.")
 

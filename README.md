@@ -54,10 +54,40 @@ The report view answers *what went wrong today*. This answers *what is wrong rig
 which is the question the job actually asks. Finding the mug on the wrong side at wrap has
 documented a reshoot. Finding it twenty seconds into the take has prevented one.
 
-It runs off any camera, so the loop works today and the glasses are a swap of the frame
-source rather than a dependency.
+A judge with no hardware can run all of this from a laptop webcam, and should. But the
+glasses are the instrument this is built for, not an interchangeable frame source, and the
+difference is the whole reason the rolling check works.
 
-**Latency: 4.2s median, 5.2s p90**, measured over twelve runs against a warm instance. So
+### Why head-mounted, and not a tripod
+
+Continuity is an attention problem before it is a vision problem. A script supervisor does
+not scan the room uniformly; they look at the things that can betray a cut, and they look at
+them **between** takes, while walking, with a clipboard already in both hands. A tripod
+camera sees the set. Glasses see what the person responsible for continuity actually checked,
+which is a different and much better-aimed signal.
+
+Two consequences the code had to be built around, both learned from real footage rather than
+assumed:
+
+- **Depth stops being a property of the object.** From a head-mounted camera, a mug moving
+  from midground to foreground usually means the wearer leaned in. Every per-object depth
+  delta this project ever produced was a false positive, so depth now only survives as
+  evidence that *several* objects moved together, which is a camera move and is reported once
+  instead of as N continuity breaks. A tripod would never have forced that distinction.
+- **Framing is never stable, so position must be relative.** The frame edges move constantly
+  with the wearer's head, which is why position is judged against the other objects in shot
+  rather than against the crop.
+
+And the output has to be audio. The wearer is watching the scene, not a screen, with their
+hands full. These glasses have no display, so a verdict spoken into the ear is not a
+consolation prize for missing hardware; it is the only delivery that works on a set. That is
+also why the rolling check has to answer inside a take rather than at wrap.
+
+**Latency: 4.2s median, 5.2s p90**, measured over twelve runs against a warm instance, and
+re-measured at 4.15s median after the move to Vertex AI, so the change of billing door did
+not change the number. Both figures are warm-instance: the first call after a cold start took
+182s while Cloud Run built the container's first Vertex credential, which is a real thing a
+judge could hit and is worth one throwaway request before recording anything. So
 the claim is "catches it inside the take", not "instant". A take runs well over thirty
 seconds, so several checks land while the camera is still rolling, which is the whole
 requirement. Checks run sequentially rather than on a fixed timer; polling faster than the
@@ -225,6 +255,10 @@ python pipeline/compare.py out/myscene/reconciled
 
 - **Gemini 3.6 Flash** via `google-genai`, falling back a generation when overloaded. Flash
   rather than Pro because this is a high-volume vision call on every take of a shoot day.
+  Reached through **Vertex AI** (`location="global"`), so the deployed service authenticates
+  as its own Cloud Run service account and no API key exists in the deployment at all. The
+  region is measured, not chosen: us-east1 does not serve 3.6 Flash and us-central1 404s on
+  both 3.5 and 3.6, so only `global` serves every model this uses.
 - **ClickHouse Cloud** via the official `mcp-clickhouse` MCP server. One denormalized
   `observations` table, `ORDER BY (scene_id, entity, take_id)`, because every question this
   asks is a filter and group-by over that.
@@ -243,6 +277,18 @@ python pipeline/compare.py out/myscene/reconciled
   because a false continuity flag costs a crew real time chasing nothing.
 - **Depth is a weak axis from POV capture.** It moves with the wearer's head, which is why
   camera-shift detection exists rather than reporting three breaks.
+- **The glasses can speak but cannot listen.** The obvious next feature is the operator
+  saying "mark take 3" instead of touching a phone, and it is not buildable on DAT 0.9.0.
+  The public `Stream` interface exposes `videoStream`, `capturePhoto`, `state`, `errorStream`
+  and `start`/`stop`, and no audio input. `AudioFrame`, `AudioDecoder` and
+  `MetaWearablesDATAudioEventListener` do ship inside `mwdat-camera`, so the capability
+  plainly exists, but reaching it would mean binding to internal classes that any SDK release
+  can move. Output is unaffected: the glasses register as an ordinary Bluetooth audio device,
+  so the spoken verdict needs no SDK support at all.
+- **Frames come from `capturePhoto`, not the video stream.** `getVideoStream()` is available
+  and would be the deeper use of the hardware, but it delivers encoded frames needing a
+  MediaCodec pipeline, and a check every few seconds does not need 24fps. The photo path
+  returns a Bitmap and is the honest fit for the duty cycle.
 - **The hosted question box takes several seconds.** Cold start plus an MCP subprocess per
   request plus two round trips to Gemini.
 - **Frames are not distributed.** `samples/` carries the scene state, not the footage, which

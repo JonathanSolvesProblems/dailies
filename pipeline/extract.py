@@ -219,12 +219,6 @@ def _load_client():
             "google-genai is not installed. Run:\n  pip install google-genai"
         ) from exc
 
-    api_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        raise RuntimeError(
-            "No API key found. Set GOOGLE_API_KEY or GEMINI_API_KEY.\n"
-            "Get one at https://aistudio.google.com/apikey"
-        )
     from pipeline.client import make_client
 
     return make_client()

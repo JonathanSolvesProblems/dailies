@@ -112,9 +112,6 @@ def _client():
         from google import genai
     except ImportError as exc:
         raise RuntimeError("google-genai is not installed. Run: pip install google-genai") from exc
-    api_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        raise RuntimeError("No API key. Set GOOGLE_API_KEY. https://aistudio.google.com/apikey")
     from pipeline.client import make_client
 
     return make_client()

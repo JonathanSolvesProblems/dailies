@@ -124,9 +124,6 @@ def _client():
 
     import os
 
-    api_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        raise RuntimeError("No API key. Set GOOGLE_API_KEY. https://aistudio.google.com/apikey")
     from pipeline.client import make_client
 
     return make_client()

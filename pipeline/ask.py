@@ -191,9 +191,6 @@ async def ask_async(question: str, scene_id: str | None = None, model: str = DEF
     from mcp import ClientSession, StdioServerParameters
     from mcp.client.stdio import stdio_client
 
-    api_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        raise RuntimeError("No API key. Set GOOGLE_API_KEY. https://aistudio.google.com/apikey")
     if not os.environ.get("CLICKHOUSE_HOST"):
         raise RuntimeError("CLICKHOUSE_HOST is not set. Copy .env.example to .env.")
 
