@@ -177,6 +177,23 @@ def reference_summary(observations: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def build_prompt(observations: list[dict], scene_context: str | None = None) -> str:
+    """The exact user turn sent with the frame.
+
+    A function rather than three lines inlined in the caller, because a benchmark that
+    retypes the prompt is not measuring this system. Turning thinking off was justified on a
+    hand-rebuilt prompt that differed from this one by its closing sentence; against the real
+    text, the same setting caught 0 of 3 mirrored frames instead of 3 of 3, and shipped.
+
+    Any harness, test or experiment must import this. Never retype it.
+    """
+    prompt = "REFERENCE TAKE recorded this:\n" + reference_summary(observations)
+    if scene_context:
+        prompt += f"\n\nScene: {scene_context}"
+    prompt += "\n\nThe frame below is from the take rolling now. What contradicts the reference?"
+    return prompt
+
+
 async def check_frame_async(
     frame_bytes: bytes,
     observations: list[dict],
@@ -195,10 +212,7 @@ async def check_frame_async(
 
     client = make_client()
 
-    prompt = "REFERENCE TAKE recorded this:\n" + reference_summary(observations)
-    if scene_context:
-        prompt += f"\n\nScene: {scene_context}"
-    prompt += "\n\nThe frame below is from the take rolling now. What contradicts the reference?"
+    prompt = build_prompt(observations, scene_context)
 
     parts = [
         types.Part.from_text(text=prompt),
@@ -209,23 +223,28 @@ async def check_frame_async(
         response_mime_type="application/json",
         response_schema=RESPONSE_SCHEMA,
         temperature=0.0,
-        # Thinking off, and measured before switching rather than assumed, using the same
-        # control-and-mirror test that disqualified Flash-Lite. Three runs per cell:
+        # THINKING STAYS ON. Do not turn it off again without re-reading this.
         #
-        #   thinking on   control 10.0s  mirrored  9.7s  0/3 false alarm  3/3 caught
-        #   budget 0      control  7.3s  mirrored  7.7s  0/3 false alarm  3/3 caught
+        # It was set to thinking_budget=0 for one day on a measurement that looked careful and
+        # was worthless: I rebuilt the prompt by hand in the test harness instead of importing
+        # the one this function sends. The two differ by a single trailing sentence, and that
+        # sentence decides everything.
         #
-        # 27% faster at identical recall, including on the adversarial frame where every
-        # object is on the wrong side. That is the outcome the Flash-Lite experiment did NOT
-        # produce: lite was faster because it had stopped looking, and it missed a fully
-        # mirrored room. Here the model still catches it, so the saving is real rather than
-        # bought with recall.
+        # Measured properly, three runs per cell, control frame and horizontally mirrored frame:
         #
-        # The reasoning holds for this call specifically: it is a closed question against a
-        # reference the model has already been handed, not an open one. If the prompt ever
-        # grows into something that needs deliberation, re-run the mirror test before
-        # trusting this line.
-        thinking_config=types.ThinkingConfig(thinking_budget=0),
+        #   PRODUCTION prompt, thinking on   mirrored 3/3 caught   control 0/3 false alarm
+        #   PRODUCTION prompt, budget 0      mirrored 0/3 caught   control 0/3 false alarm
+        #   my harness prompt, thinking on   mirrored 3/3 caught   control 0/3 false alarm
+        #   my harness prompt, budget 0      mirrored 3/3 caught   control 0/3 false alarm
+        #
+        # With the prompt this code actually sends, thinking off is completely blind to a room
+        # where every object has swapped sides, and silent about it. It is the Flash-Lite
+        # result exactly: 27% faster because it had stopped looking. The negative control still
+        # passed 6/6, which is why this survived a day undetected. A quiet detector looks
+        # identical to a working one until something is wrong in front of it.
+        #
+        # The lesson is not about thinking budgets. It is that a recall test must exercise the
+        # code path that ships, not a reconstruction of it. Import the prompt; never retype it.
     )
 
     started = time.perf_counter()
