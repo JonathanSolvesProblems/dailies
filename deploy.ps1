@@ -23,7 +23,7 @@ $URL     = "https://dailies-564641829203.us-east1.run.app"
 # Update this whenever you ship something whose absence would be invisible. A marker left
 # pointing at an old change still passes while the new one is missing, which is the exact
 # failure this script exists to catch.
-$MARKER = "rel=\"icon\""
+$MARKER = "%232FBF84"
 $MARKER_PATH = "/"
 
 Write-Host "`n=== uncommitted work? ===" -ForegroundColor Cyan
