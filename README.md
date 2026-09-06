@@ -44,6 +44,25 @@ and the agent writes its own SQL, runs it through the ClickHouse MCP server, and
 The artifact is the crew member's paperwork. Catching a continuity break is a consequence
 of having the records, not the identity of the product.
 
+### The system records its own runs in the same place
+
+Every model call this project makes also lands in ClickHouse, as a row in `agent_runs`:
+the operation, which model answered, latency, outcome, the entities it flagged, the SQL it
+chose, and whether a fallback fired. The rolling check writes the take it was checking
+against, so each verdict joins back to the shoot it belongs to.
+
+So the agent's own behaviour is queryable through the same question box as the footage.
+"How fast is the rolling check, and what does it flag most?" is a SELECT over the same
+cluster, with no separate dashboard and no second tool. The four queries in
+`pipeline/telemetry.py` (`live_latency_percentiles`, `divergence_rate`,
+`most_flagged_entities`, `fallback_usage`) are the ones I found myself running by hand
+while tuning it, which is how they earned a place.
+
+This is the shape ClickHouse's own AI team describes for agent observability, a trace kept
+inside the analytical store rather than beside it. Here it was not added for the writeup:
+once every read path was on ClickHouse, writing the run record there was simply the obvious
+place to put it.
+
 ## Rolling: catching it before the take is spoiled
 
 `/live` is the same instrument in its operating mode. Pick a reference take, press **Roll**,
@@ -262,7 +281,7 @@ not evidence.
 
 ### Hosted
 
-**https://dailies-564641829203.us-east1.run.app** — no setup, no glasses, no key.
+**https://dailies-564641829203.us-east1.run.app**: no setup, no glasses, no key.
 Add `?theme=light` for the light palette.
 
 ### Locally

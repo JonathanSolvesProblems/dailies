@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dailies — rolling</title>
+<title>Dailies: rolling</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Saira+Semi+Condensed:wght@400;500;600;700&family=Chivo+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -323,7 +323,7 @@ async function checkOnce() {
       $("state").className = "state break";
       $("state").textContent = "Off the mark";
       $("detail").innerHTML = divs.map(d =>
-        `<em>${esc(d.entity)}</em> — reference has it ${esc(d.expected)}, frame shows ${esc(d.observed)}`
+        `<em>${esc(d.entity)}</em>: reference has it ${esc(d.expected)}, frame shows ${esc(d.observed)}`
       ).join("<br>");
     } else {
       $("state").className = "state hold";
