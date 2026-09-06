@@ -11,9 +11,10 @@ Built for [Agentic Cinema](https://agentic-cinema.devpost.com/), ClickHouse trac
 
 ## The problem
 
-Continuity is the job of making sure takes can be cut together: the mug on the same side
-of the table, the jacket buttoned the same way, the phone in the same hand. It is tracked
-by hand, on paper, take after take, and when it goes wrong nobody finds out until the edit.
+A script supervisor stands just off set with a clipboard, and between every take writes
+down where the mug sat, whether the jacket was buttoned, which hand held the phone. That is
+what lets takes cut together. It is the one job on a shoot still done entirely on paper, and
+when a line gets missed nobody finds out until the edit.
 
 By then it is not an edit problem. It is a pickup day. A published survey of US production
 markets prices a 6-person, 10-hour shoot day at

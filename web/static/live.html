@@ -176,7 +176,7 @@ h2::before { content: ""; width: 3px; height: 12px; background: var(--accent); }
   </nav>
   <select id="scene" aria-label="Scene"></select>
   <select id="ref" aria-label="Reference take"></select>
-  <select id="cam-pick" aria-label="Camera" title="Camera"></select>
+  <select id="cam-pick" aria-label="Camera" title="Camera" hidden></select>
   <span class="spacer"></span>
   <span class="readout" id="stats" style="font-family:var(--mono);font-size:11px;color:var(--ink-faint)"></span>
   <button class="btn" id="roll">Roll</button>
@@ -385,7 +385,10 @@ async function listCameras(activeId) {
     if (d.deviceId === activeId) o.selected = true;
     sel.appendChild(o);
   });
-  sel.style.display = devices.length > 1 ? "" : "none";
+  // Hidden by default in the markup and revealed here, not the other way round. It used to
+  // start visible and be hidden after the first getUserMedia, which only runs on Roll, so
+  // every judge opening /live saw an empty dropdown in the header before pressing anything.
+  sel.hidden = devices.length <= 1;
   return devices;
 }
 
