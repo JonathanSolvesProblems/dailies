@@ -203,7 +203,19 @@ fun RollScreen(vm: RollViewModel) {
     val linkMessage by vm.glasses.message.collectAsStateWithLifecycle()
 
     Column(
-        Modifier.fillMaxSize().background(Body).padding(18.dp),
+        Modifier
+            .fillMaxSize()
+            .background(Body)
+            // Inset padding BEFORE the visual padding, so the 18dp gutter is measured from
+            // the usable screen rather than from the physical edge.
+            //
+            // Without this the title sat underneath the status bar, "DAILIES" overlapping the
+            // clock and the standby pill colliding with the battery icon, while ROLL was
+            // clipped by the gesture bar at the bottom. Found by installing the APK on the
+            // real phone and looking at it: the layout is correct on paper and wrong on a
+            // device with a notch and a gesture bar, which is every device this ships to.
+            .windowInsetsPadding(WindowInsets.systemBars)
+            .padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
