@@ -330,9 +330,21 @@ def live_reference(scene_id: str, take_id: str | None = None):
     }
 
 
+# The two HTML pages carry the whole UI inline, so a cached copy is a cached application.
+#
+# FileResponse sets no Cache-Control, which leaves the browser free to apply its own heuristic
+# freshness. A phone that had opened /live earlier kept serving the previous build after three
+# separate deploys, showing an operator line that had already been replaced. A judge who opens
+# the page, comes back after a fix, and sees the old one has no way to know why.
+#
+# no-cache is not no-store: the copy is still kept, it just has to be revalidated, so this
+# costs a conditional request rather than a full download.
+NO_CACHE = {"Cache-Control": "no-cache, must-revalidate"}
+
+
 @app.get("/live")
 def live_page():
-    return FileResponse(STATIC / "live.html")
+    return FileResponse(STATIC / "live.html", headers=NO_CACHE)
 
 
 @app.get("/api/capabilities")
@@ -361,7 +373,7 @@ def capabilities():
 
 @app.get("/")
 def index():
-    return FileResponse(STATIC / "index.html")
+    return FileResponse(STATIC / "index.html", headers=NO_CACHE)
 
 
 if STATIC.is_dir():
