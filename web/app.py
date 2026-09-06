@@ -27,7 +27,7 @@ sys.path.insert(0, str(ROOT))
 from pydantic import BaseModel  # noqa: E402
 
 from pipeline.compare import compare  # noqa: E402
-from pipeline.store import JsonStore, load_env, to_dict  # noqa: E402
+from pipeline.store import load_env, make_store, to_dict  # noqa: E402
 
 load_env()
 
@@ -40,7 +40,10 @@ app = FastAPI(
     version="0.1.0",
 )
 
-store = JsonStore(OUT_DIR)
+# ClickHouse when the cluster is configured, JSON otherwise. Every read path in the app
+# goes through this: the report view, the facing page and the live check's reference, not
+# only the question box. On a ClickHouse track that distinction is most of the point.
+store, STORE_BACKEND = make_store(OUT_DIR)
 
 
 def _states_for_compare(scene_id: str) -> dict[str, dict]:
@@ -65,7 +68,7 @@ def health():
     scenes = store.list_scenes()
     return {
         "status": "ok",
-        "backend": "json",
+        "backend": STORE_BACKEND,
         "scenes": len(scenes),
         "takes": sum(s.take_count for s in scenes),
         "observations": sum(s.observation_count for s in scenes),

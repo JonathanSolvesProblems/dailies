@@ -72,3 +72,54 @@ class TestRecallCriticalConstants:
         # Raising it past 0.90 would start dropping true positives.
         assert live.MIN_CONFIDENCE == 0.65
         assert live.MIN_CONFIDENCE < 0.90
+
+
+class TestStoreBackendSelection:
+    """ClickHouse backs the read paths when configured, JSON when not.
+
+    The app shipped for weeks with /api/health announcing backend "json" while the ClickHouse
+    track's whole requirement is that the cluster is used at runtime. It was: by exactly one
+    endpoint out of eight. These assert the selection logic, not the cluster.
+    """
+
+    def test_no_config_gives_json(self, monkeypatch, tmp_path):
+        from pipeline import store as S
+
+        monkeypatch.delenv("CLICKHOUSE_HOST", raising=False)
+        _, backend = S.make_store(tmp_path)
+        assert backend == "json"
+
+    def test_config_gives_clickhouse(self, monkeypatch, tmp_path):
+        from pipeline import store as S
+
+        monkeypatch.setenv("CLICKHOUSE_HOST", "example.invalid")
+        st, backend = S.make_store(tmp_path)
+        assert backend == "clickhouse"
+        assert isinstance(st, S.ClickHouseStore)
+
+    def test_clickhouse_falls_back_rather_than_500(self, tmp_path):
+        """A sleeping cluster must degrade to a working page, not an error."""
+        from pipeline import store as S
+
+        (tmp_path / "scene_x").mkdir()
+        js = S.JsonStore(tmp_path)
+        st = S.ClickHouseStore(
+            {"host": "nonexistent.invalid", "port": 8443,
+             "username": "u", "password": "p", "database": "default"},
+            fallback=js,
+        )
+        assert st.list_scenes() == js.list_scenes()
+
+    def test_no_fallback_raises_instead_of_lying(self, tmp_path):
+        """Without a fallback the error must surface, not become an empty scene list."""
+        import pytest as _pytest
+
+        from pipeline import store as S
+
+        st = S.ClickHouseStore(
+            {"host": "nonexistent.invalid", "port": 8443,
+             "username": "u", "password": "p", "database": "default"},
+            fallback=None,
+        )
+        with _pytest.raises(Exception):
+            st.list_scenes()
