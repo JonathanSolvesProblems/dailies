@@ -28,7 +28,14 @@
   --accent: #136B49; --accent-deep: #0C4A32; --alert: #8E3524; --alert-deep: #5E2117;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; }
+/* 100dvh, not 100%. The verdict is absolutely positioned at the bottom of the stage, so the
+   page height decides whether it is on screen. On a phone, 100% resolves to the layout
+   viewport, which Chrome's address bar then overlays, and the verdict line was cut in half
+   at the bottom edge of a real Galaxy S24: "Pick a reference take and press" with the rest
+   underneath the browser chrome. That is the one line telling the operator what to do.
+   Dynamic viewport units account for the retracting bar. The 100% first is the fallback for
+   anything without dvh support. */
+html, body { margin: 0; height: 100%; height: 100dvh; }
 body {
   background: var(--body); color: var(--ink); font-family: var(--sans);
   font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased;

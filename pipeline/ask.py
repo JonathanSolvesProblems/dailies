@@ -104,6 +104,18 @@ def _mcp_env() -> dict:
     env.setdefault("CLICKHOUSE_VERIFY", "true")
     env.setdefault("CLICKHOUSE_PORT", "8443")
     env.setdefault("CLICKHOUSE_DATABASE", "default")
+    # Read-only, stated rather than inherited. Both of these already default to false in
+    # mcp-clickhouse 0.4.1, and the cluster user is itself readonly, so a write is refused
+    # twice over: verified by driving DDL, INSERT, TRUNCATE and DROP through the server and
+    # getting ClickHouse code 164 on all four while a SELECT returned normally.
+    #
+    # They are set here anyway because this agent writes its own SQL and runs it against a
+    # cluster from a public URL, so anyone can type anything into the question box. A safety
+    # property that depends on a library's current default is one dependency bump away from
+    # not holding, and it should be visible in the code that grants the access rather than
+    # only in someone else's changelog.
+    env.setdefault("CLICKHOUSE_ALLOW_WRITE_ACCESS", "false")
+    env.setdefault("CLICKHOUSE_ALLOW_DROP", "false")
     # Quieter subprocess: the server prints a banner and an update notice on every start,
     # which is noise in a web request log.
     env.setdefault("FASTMCP_DISABLE_BANNER", "1")
