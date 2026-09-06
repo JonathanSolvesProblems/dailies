@@ -300,7 +300,11 @@ async def live_check(payload: LiveFrame):
 
     try:
         result = await check_frame_async(
-            decode_frame(payload.frame), observations, payload.scene_context
+            decode_frame(payload.frame),
+            observations,
+            payload.scene_context,
+            scene_id=payload.scene_id,
+            take_id=ref_id,
         )
     except (RuntimeError, ValueError) as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc

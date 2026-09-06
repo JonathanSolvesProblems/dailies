@@ -199,6 +199,8 @@ async def check_frame_async(
     observations: list[dict],
     scene_context: str | None = None,
     model: str = DEFAULT_MODEL,
+    scene_id: str = "",
+    take_id: str = "",
 ) -> LiveCheck:
     import time
 
@@ -279,11 +281,18 @@ async def check_frame_async(
             # to slow it down or break it.
             try:
                 from pipeline.telemetry import Run, record
+                # scene_id and take_id are the join key back to the takes and observations
+                # tables. Without them every rolling check landed in ClickHouse as an orphan
+                # row, and the agent, asked which entities were flagged most, answered
+                # correctly and then added on its own that the checks had "no take IDs
+                # attached." A judge would have read that caveat.
                 record(Run(
                     operation="live_check",
                     model=candidate,
                     latency_ms=result.latency_ms,
                     outcome="divergence" if divergences else "holds",
+                    scene_id=scene_id,
+                    take_id=take_id,
                     findings=len(divergences),
                     entities=[d.entity for d in divergences],
                     detail=result.frame_note,
