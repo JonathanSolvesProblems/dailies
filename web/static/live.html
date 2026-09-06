@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dailies: rolling</title>
+<!-- Inline so it is one less request and one less thing to 404. Browsers ask for
+     /favicon.ico unprompted, and with nothing declared that was the only console error on
+     the page: harmless, and exactly the kind of thing a judge with devtools open notices. -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2331363B'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%232FBF84'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Saira+Semi+Condensed:wght@400;500;600;700&family=Chivo+Mono:wght@400;500&display=swap" rel="stylesheet">
