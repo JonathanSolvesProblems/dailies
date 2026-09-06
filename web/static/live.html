@@ -526,30 +526,42 @@ async function boot() {
 //
 // Reported rather than hidden, because a wait you can see is a different experience from one
 // you cannot. The Roll button stays live throughout: this is a courtesy, not a gate.
+// The operator's line stays one short sentence; the engineering goes in the note underneath.
+//
+// This read "Ready. Model answered in 4349ms via vertex:warden-agent-supervisor:global. Pick
+// a reference take and press Roll." On a phone that wrapped past the bottom of the stage,
+// which is overflow:hidden, and the sentence was cut mid-word at "and press". The clipped
+// half was the only instruction telling the operator what to do next, and the half that
+// survived was a Google Cloud project name they have no use for. Detail is for the person
+// holding the phone; note is for whoever wants to know which model answered.
 async function warmUp() {
-  const s = $("state"), d = $("detail");
+  const s = $("state"), d = $("detail"), n = $("note");
   if (rolling) return;
   s.className = "state idle";
   s.textContent = "Waking";
-  d.textContent = "First call to the model on a cold container can take a minute. Doing it now so your first take does not.";
+  d.textContent = "Warming the model so your first take does not wait.";
   const t0 = performance.now();
   const tick = setInterval(() => {
-    if (!rolling) d.textContent =
-      `Waking the service, ${((performance.now() - t0) / 1000).toFixed(0)}s. You can press Roll at any time.`;
+    if (!rolling) n.textContent = `${((performance.now() - t0) / 1000).toFixed(0)}s. Roll works at any time.`;
   }, 1000);
   try {
     const r = await api("/api/warm");
     clearInterval(tick);
     if (rolling) return;
     s.textContent = "Standby";
-    d.textContent = r.warm
-      ? `Ready. Model answered in ${r.ms}ms via ${r.model}. Pick a reference take and press Roll.`
-      : `Model not reachable: ${r.detail || "unknown"}. The report view still works.`;
+    if (r.warm) {
+      d.textContent = "Ready. Pick a reference take and press Roll.";
+      n.textContent = `model warm in ${r.ms}ms · ${r.model}`;
+    } else {
+      d.textContent = "Model not reachable. The report view still works.";
+      n.textContent = r.detail || "";
+    }
   } catch (e) {
     clearInterval(tick);
     if (rolling) return;
     s.textContent = "Standby";
-    d.textContent = `Could not reach the service: ${e.message}`;
+    d.textContent = "Could not reach the service.";
+    n.textContent = e.message;
   }
 }
 
