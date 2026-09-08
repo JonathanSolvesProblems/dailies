@@ -375,6 +375,38 @@ python pipeline/compare.py out/myscene/reconciled
   45,002 frames with no cap, so the 3-minute limit belongs to the stock camera app rather
   than the platform.
 
+### Where Google Cloud and ClickHouse are actually called
+
+The rules ask for runtime use, imported and called in code rather than named in a readme, so
+here is the shortest path to checking that. Every line below is on a request path, not in a
+script that has to be run by hand.
+
+| | file | what to look at |
+|---|---|---|
+| Vertex AI | [`pipeline/client.py`](pipeline/client.py) | `genai.Client(vertexai=True, project=..., location=...)`, the one place that decides how Gemini is reached. `describe()` is what `/api/capabilities` reports. |
+| Vertex AI | [`pipeline/extract.py`](pipeline/extract.py) | `generate_content` per take, schema-constrained, with the generation fallback |
+| Vertex AI | [`pipeline/live.py`](pipeline/live.py) | the rolling check, one call per frame, and `build_prompt()` |
+| Vertex AI | [`pipeline/ask.py`](pipeline/ask.py) | the tool-calling loop: Gemini is the caller, MCP tools are the callee |
+| ClickHouse | [`pipeline/store.py`](pipeline/store.py) | `ClickHouseStore`, which serves every read path, and the schema |
+| ClickHouse | [`pipeline/ask.py`](pipeline/ask.py) | `mcp-clickhouse` launched as a subprocess, `_mcp_env()` handing it the SELECT-only credential |
+| ClickHouse | [`pipeline/telemetry.py`](pipeline/telemetry.py) | `INSERT INTO agent_runs`, on every model call the system makes |
+| ClickHouse | [`pipeline/load_clickhouse.py`](pipeline/load_clickhouse.py) | ingest, and the file that rebuilt the table after I dropped it |
+
+Or check the running service instead of the code:
+
+```
+curl https://dailies-564641829203.us-east1.run.app/api/health
+{"status":"ok","backend":"clickhouse","scenes":1,"takes":5,"observations":38}
+
+curl https://dailies-564641829203.us-east1.run.app/api/capabilities
+{"ask":true,"model":"vertex:warden-agent-supervisor:global","store":"clickhouse","sql_credential":"readonly"}
+```
+
+`backend` is the store that answered, `model` is the live Vertex project and location, and
+`sql_credential` is which cluster user the SQL agent connects as. All three are read from the
+code that does the work rather than from configuration, so a deployment that has quietly lost
+one of them says so.
+
 ## Honest limitations
 
 - **The demo scene is one desk, five takes.** The findings above are real and the ground
