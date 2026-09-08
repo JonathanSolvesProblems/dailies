@@ -7,6 +7,8 @@ paperwork already written.**
 
 **Live: [dailies-564641829203.us-east1.run.app](https://dailies-564641829203.us-east1.run.app)**, and it runs from any webcam, so it can be tried without the glasses.
 
+**Write-up: [how I built it, and what the hardware forced](https://jonathanandrei.com/blog/dailies-smart-glasses-continuity-clickhouse-agentic-cinema/)**
+
 Built for [Agentic Cinema](https://agentic-cinema.devpost.com/), ClickHouse track.
 
 [![Watch the demo](https://i.ytimg.com/vi/BOka9As4lVE/maxresdefault.jpg)](https://www.youtube.com/watch?v=BOka9As4lVE)

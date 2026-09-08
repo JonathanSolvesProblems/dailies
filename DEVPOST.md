@@ -27,6 +27,14 @@ the authority. If one changes, change all of them in the same commit.
 | ClickHouse code 497 on every write path | `README.md`, "The agent writes SQL, and cannot write data" |
 | 29 tests | `tests/`, run `pytest` |
 
+## The write-up
+
+**https://jonathanandrei.com/blog/dailies-smart-glasses-continuity-clickhouse-agentic-cinema/**
+
+Roughly 2,000 words. Its figures were checked against this repo and agree: $1,440 and
+$3,020, 1.6 cents a take, 63 cents a day, 4.4 s median, ClickHouse code 497, and the
+25 minute / 45,002 frame soak. If a number changes here, it changes there too.
+
 ## The video
 
 **https://www.youtube.com/watch?v=BOka9As4lVE**
@@ -40,6 +48,8 @@ Unlisted, so confirm it is Public in YouTube Studio.
 - [x] Upload the video to YouTube and record the URL. Done, above and in
       `broll/submission.md`. Still paste it into the Devpost Video field.
 - [ ] Confirm the video is **Public**, not Unlisted.
+- [ ] Add the blog link to the YouTube description. The copy in `broll/submission.md`
+      already has it, so re-pasting that whole description is the safe way to do it.
 - [ ] Upload the eight images from `broll/preview/` in the order listed at the bottom of
       `broll/submission.md`.
 - [ ] Confirm the ClickHouse "first time using" answer, which is the one field that could not
