@@ -69,3 +69,24 @@ raw screen recording rather than a Playwright capture: a Chrome find bar is on s
 to 39s and again from 43s, and the browser is windowed with the Windows taskbar visible until
 it goes fullscreen at 54s. The fullscreen exit toast clears at 60s. **Only use 60s to 155s of
 that clip.** Past 155s it is the rolling view with a camera permission dialog.
+
+## Lower thirds: cards get one, footage does not
+
+vidkit draws the lower third at a fixed `x=56, y=h-104`, which is exactly where this app puts
+its own output. It was set on every segment, and it collided in fourteen of eighteen shots:
+the finding rows, the take-scale columns, the SQL, and `Nothing contradicts the reference` on
+every rolling shot. The worst was the catch, where the plate sat straight across
+`coffee mug: reference has it right, by the laptop, frame shows left, by the laptop`, which is
+the most important line in the video.
+
+There is no fixed position that avoids this. The top band is the toolbar and the page header,
+the right is the reference panel and the table's own columns, and the bottom edge is the
+model's summary line with its latency and model name. That is what a full-screen app looks
+like, and the app's text is the product while the plate is decoration.
+
+So a lower third is set only on `15-source`, `05-glasses` and `50-architecture`, whose
+backgrounds are surfaces I control and left empty. On footage the app already says what the
+shot is in its own words, and the burned-in caption already carries the narration, so the
+plate was a third text layer whose only effect was hiding the second one.
+
+If a future cut adds a segment, leave `lower_third` empty unless the clip is a card.
