@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"
+     font-family="Cascadia Code, Consolas, DejaVu Sans Mono, monospace">
+  <rect width="1920" height="1080" fill="#1C2024"/>
+
+  <text x="96" y="86" fill="#ECEFF1" font-size="38" font-weight="700"
+        font-family="Segoe UI, Inter, Arial, sans-serif">ClickHouse Cloud, as the running service uses it</text>
+  <rect x="96" y="102" width="74" height="4" fill="#F5C24A"/>
+  <text x="96" y="142" fill="#8A9399" font-size="21" font-family="Segoe UI, Inter, Arial, sans-serif">
+    Not a screenshot of a schema. These are the rows the pipeline wrote while it was reading takes.</text>
+
+  <!-- ============ left: the cluster ============ -->
+  <rect x="96" y="184" width="850" height="392" rx="12" fill="#15181C" stroke="#2C333A" stroke-width="2"/>
+  <text x="124" y="224" fill="#5D6A73" font-size="17">connected as dailies_ro</text>
+  <text x="124" y="252" fill="#5D6A73" font-size="17">&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;.us-east1.gcp.clickhouse.cloud &#183; server 26.4.1.2212</text>
+
+  <text x="124" y="308" fill="#2FBF84" font-size="19">SHOW TABLES</text>
+  <text x="148" y="340" fill="#ECEFF1" font-size="19">agent_runs</text>
+  <text x="148" y="368" fill="#ECEFF1" font-size="19">observations</text>
+  <text x="148" y="396" fill="#ECEFF1" font-size="19">takes</text>
+
+  <text x="560" y="308" fill="#2FBF84" font-size="19">SELECT count()</text>
+  <text x="584" y="340" fill="#F5C24A" font-size="19">279</text>
+  <text x="584" y="368" fill="#F5C24A" font-size="19">38</text>
+  <text x="584" y="396" fill="#F5C24A" font-size="19">5</text>
+
+  <line x1="124" y1="428" x2="918" y2="428" stroke="#2C333A" stroke-width="2"/>
+  <text x="124" y="464" fill="#5D6A73" font-size="17">agent_runs is every model call this project has made.</text>
+  <text x="124" y="496" fill="#ECEFF1" font-size="19">live_check      246 runs     median 3.52 s</text>
+  <text x="124" y="528" fill="#ECEFF1" font-size="19">ask              33 runs</text>
+  <text x="124" y="556" fill="#5D6A73" font-size="16">So "what does the rolling check flag most often" is a question about itself.</text>
+
+  <!-- ============ right: the guard ============ -->
+  <rect x="978" y="184" width="846" height="392" rx="12" fill="#15181C" stroke="#E0A33E" stroke-width="2"/>
+  <text x="1006" y="224" fill="#E0A33E" font-size="19" font-weight="700"
+        font-family="Segoe UI, Inter, Arial, sans-serif">The credential the SQL agent runs as cannot write</text>
+  <text x="1006" y="254" fill="#5D6A73" font-size="16">GRANT SELECT ON default.* &#183; readonly = 2 &#183; handed only to the MCP subprocess</text>
+
+  <text x="1006" y="304" fill="#ECEFF1" font-size="19">DROP TABLE observations</text>
+  <text x="1600" y="304" fill="#E8564B" font-size="19">code 497</text>
+  <text x="1006" y="340" fill="#ECEFF1" font-size="19">INSERT INTO observations</text>
+  <text x="1600" y="340" fill="#E8564B" font-size="19">code 497</text>
+  <text x="1006" y="376" fill="#ECEFF1" font-size="19">TRUNCATE TABLE observations</text>
+  <text x="1600" y="376" fill="#E8564B" font-size="19">code 497</text>
+  <text x="1006" y="412" fill="#ECEFF1" font-size="19">CREATE TABLE evil</text>
+  <text x="1600" y="412" fill="#E8564B" font-size="19">code 497</text>
+  <text x="1006" y="448" fill="#ECEFF1" font-size="19">ALTER TABLE observations DELETE</text>
+  <text x="1600" y="448" fill="#E8564B" font-size="19">code 497</text>
+  <line x1="1006" y1="478" x2="1796" y2="478" stroke="#2C333A" stroke-width="2"/>
+  <text x="1006" y="512" fill="#ECEFF1" font-size="19">SELECT count() FROM observations</text>
+  <text x="1600" y="512" fill="#2FBF84" font-size="19">38</text>
+  <text x="1006" y="552" fill="#5D6A73" font-size="16">Every write path refused. Reads unaffected. Run against the live cluster.</text>
+
+  <!-- ============ bottom: the deployed service agrees ============ -->
+  <rect x="96" y="620" width="1728" height="300" rx="12" fill="#15181C" stroke="#2C333A" stroke-width="2"/>
+  <text x="124" y="662" fill="#8A9399" font-size="18" font-family="Segoe UI, Inter, Arial, sans-serif">
+    And the deployed service says the same thing, so none of this has to be taken on trust:</text>
+
+  <text x="124" y="712" fill="#2FBF84" font-size="18">GET /api/health</text>
+  <text x="148" y="748" fill="#ECEFF1" font-size="19">{"status":"ok","backend":"clickhouse","scenes":1,"takes":5,"observations":38}</text>
+
+  <text x="124" y="806" fill="#2FBF84" font-size="18">GET /api/capabilities</text>
+  <text x="148" y="842" fill="#ECEFF1" font-size="19">{"ask":true,"model":"vertex:warden-agent-supervisor:global",</text>
+  <text x="148" y="872" fill="#ECEFF1" font-size="19"> "store":"clickhouse","sql_credential":"readonly"}</text>
+
+  <text x="1824" y="978" fill="#5D6A73" font-size="18" text-anchor="end"
+        font-family="Segoe UI, Inter, Arial, sans-serif">dailies-564641829203.us-east1.run.app</text>
+</svg>

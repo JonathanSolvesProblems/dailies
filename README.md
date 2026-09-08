@@ -75,6 +75,9 @@ Check it from outside rather than believing this paragraph. `/api/capabilities` 
 `"sql_credential": "readonly"`, and it reads that from the same function that builds the
 subprocess environment, so the two cannot disagree.
 
+![The live ClickHouse cluster: row counts read as the SELECT-only user, and DROP, INSERT,
+TRUNCATE, CREATE TABLE and ALTER all refused with code 497](docs/clickhouse-receipt.png)
+
 This layer was missing for part of the build and the writeup described it anyway. The
 service ran with `CLICKHOUSE_USER=default`, the admin account, and the gap only surfaced when
 a `DROP TABLE observations` aimed at what was believed to be a readonly credential removed

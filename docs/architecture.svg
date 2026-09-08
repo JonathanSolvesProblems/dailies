@@ -143,19 +143,20 @@
   <rect x="1404" y="592" width="112" height="26" rx="4" fill="#1C2024"/>
   <text x="1408" y="612" fill="#E0A33E" font-size="16">SELECT only</text>
   <!-- service -> clickhouse (direct writes/reads) -->
-  <path d="M918 660 C 1170 800, 1400 800, 1636 700" stroke="#F5C24A" stroke-width="2.5" marker-end="url(#arA)" fill="none"/>
-  <rect x="1044" y="756" width="428" height="30" rx="4" fill="#1C2024"/>
-  <text x="1052" y="779" fill="#8A9399" font-size="17">every take, every observation, every run</text>
+  <path d="M918 650 C 1150 742, 1400 742, 1636 692" stroke="#F5C24A" stroke-width="2.5" marker-end="url(#arA)" fill="none"/>
+  <rect x="1044" y="748" width="428" height="30" rx="4" fill="#1C2024"/>
+  <text x="1052" y="771" fill="#8A9399" font-size="17">every take, every observation, every run</text>
 
   <!-- ================= return path ================= -->
-  <rect x="96" y="836" width="1728" height="128" rx="16" fill="#1F2429" stroke="#2FBF84" stroke-width="2"/>
-  <g transform="translate(140 866) scale(0.78)"><use href="#glasses"/></g>
-  <path d="M300 900 L360 900" stroke="#2FBF84" stroke-width="2.5" marker-start="url(#arG)" fill="none"/>
-  <text x="380" y="890" fill="#ECEFF1" font-size="24" font-weight="600">The verdict comes back the way it left, spoken into the wearer&#8217;s ear.</text>
-  <text x="380" y="928" fill="#8A9399" font-size="20">4.4 s median on the deployed service. A script supervisor is watching the scene, not a screen.</text>
-  <text x="1800" y="908" fill="#2FBF84" font-size="30" font-weight="700" text-anchor="end">4.4s</text>
-
-  <!-- ================= footer ================= -->
-  <text x="96" y="1020" fill="#5D6A73" font-size="18">dailies-564641829203.us-east1.run.app</text>
-  <text x="1824" y="1020" fill="#5D6A73" font-size="18" text-anchor="end">1.6&#162; a take &#183; 63&#162; a 40-take shoot day</text>
+  <!-- Sits at 792 rather than down at the foot of the frame. This still is used as a shot in
+       the demo video, where the burned-in caption occupies roughly y 915 to 960, and at the
+       old height the caption cut straight through this box. The footer line that used to be
+       below it is gone for the same reason: it was illegible at video size, and the URL it
+       carried is already on the closing card. -->
+  <rect x="96" y="792" width="1728" height="128" rx="16" fill="#1F2429" stroke="#2FBF84" stroke-width="2"/>
+  <g transform="translate(140 822) scale(0.78)"><use href="#glasses"/></g>
+  <path d="M300 856 L360 856" stroke="#2FBF84" stroke-width="2.5" marker-start="url(#arG)" fill="none"/>
+  <text x="380" y="846" fill="#ECEFF1" font-size="24" font-weight="600">The verdict comes back the way it left, spoken into the wearer&#8217;s ear.</text>
+  <text x="380" y="884" fill="#8A9399" font-size="20">4.4 s median on the deployed service. A script supervisor is watching the scene, not a screen.</text>
+  <text x="1800" y="864" fill="#2FBF84" font-size="30" font-weight="700" text-anchor="end">4.4s</text>
 </svg>
