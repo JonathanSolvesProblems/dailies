@@ -3,6 +3,10 @@
 Footage captured for the demo video. Not distributed: this is video of a real home and the
 people in it, and the repo is public.
 
+The finished cut is public, though, and is what these clips were gathered for:
+**https://www.youtube.com/watch?v=BOka9As4lVE** (2 min 31 s). If it is ever re-cut, the
+render command and the two traps are further down this file.
+
 Suggested layout:
 
     broll/glasses/     unboxing, putting them on, the capture LED

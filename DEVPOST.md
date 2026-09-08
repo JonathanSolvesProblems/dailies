@@ -27,10 +27,19 @@ the authority. If one changes, change all of them in the same commit.
 | ClickHouse code 497 on every write path | `README.md`, "The agent writes SQL, and cannot write data" |
 | 29 tests | `tests/`, run `pytest` |
 
+## The video
+
+**https://www.youtube.com/watch?v=BOka9As4lVE**
+
+2 min 31 s, under the 3 minute cap. Verified reachable without a login, with the title on
+YouTube matching the one in `broll/submission.md`. That check cannot tell Public from
+Unlisted, so confirm it is Public in YouTube Studio.
+
 ## Before submitting
 
-- [ ] Upload the video to YouTube as **Public**, English, then paste the URL into the Video
-      field in `broll/submission.md` and into the form.
+- [x] Upload the video to YouTube and record the URL. Done, above and in
+      `broll/submission.md`. Still paste it into the Devpost Video field.
+- [ ] Confirm the video is **Public**, not Unlisted.
 - [ ] Upload the eight images from `broll/preview/` in the order listed at the bottom of
       `broll/submission.md`.
 - [ ] Confirm the ClickHouse "first time using" answer, which is the one field that could not

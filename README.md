@@ -3,12 +3,18 @@
 **A camera assistant wears smart glasses through a shoot and walks off set with the
 paperwork already written.**
 
-Live: **https://dailies-564641829203.us-east1.run.app**
+**Demo: [2 min 31 s on YouTube](https://www.youtube.com/watch?v=BOka9As4lVE)**
+
+**Live: [dailies-564641829203.us-east1.run.app](https://dailies-564641829203.us-east1.run.app)**, and it runs from any webcam, so it can be tried without the glasses.
 
 Built for [Agentic Cinema](https://agentic-cinema.devpost.com/), ClickHouse track.
 
-![How Dailies fits together: Ray-Ban Meta glasses to Cloud Run to Gemini on Vertex AI to
-ClickHouse Cloud, with the verdict spoken back into the wearer's ear](docs/architecture.png)
+[![Watch the demo](https://i.ytimg.com/vi/BOka9As4lVE/maxresdefault.jpg)](https://www.youtube.com/watch?v=BOka9As4lVE)
+
+Every shot in it is the deployed service running on real footage. The catch is at
+[0:49](https://www.youtube.com/watch?v=BOka9As4lVE&t=49s).
+
+![How Dailies fits together: Ray-Ban Meta glasses, Cloud Run, Gemini on Vertex AI and ClickHouse Cloud, with the verdict spoken back into the wearer's ear](docs/architecture.png)
 
 Every arrow in that diagram runs in the deployed service. Nothing in it is planned work.
 
@@ -24,7 +30,8 @@ when a line gets missed nobody finds out until the edit.
 By then it is not an edit problem. It is a pickup day. A published survey of 40 US
 production markets prices a fixed 6-person, 10-hour shoot day at
 [$1,440 in the cheapest market, Santa Fe, and $3,020 in the most expensive, Boston](https://giggster.com/guide/reports/film-shoot-costs-major-us-cities-2026/).
-That page is on screen in the demo video at the moment the figure is spoken, because a
+That page is on screen in the [demo video at
+0:23](https://www.youtube.com/watch?v=BOka9As4lVE&t=23s), at the moment the figure is spoken, because a
 number is worth what its source is.
 
 Dailies watches a take for **1.6 cents**, measured on real footage through the same Vertex AI
