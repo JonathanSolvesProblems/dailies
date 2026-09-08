@@ -16,9 +16,11 @@ down where the mug sat, whether the jacket was buttoned, which hand held the pho
 what lets takes cut together. It is the one job on a shoot still done entirely on paper, and
 when a line gets missed nobody finds out until the edit.
 
-By then it is not an edit problem. It is a pickup day. A published survey of US production
-markets prices a 6-person, 10-hour shoot day at
-[$1,440 in the cheapest market and $3,020 in the most expensive](https://giggster.com/guide/reports/film-shoot-costs-major-us-cities-2026/).
+By then it is not an edit problem. It is a pickup day. A published survey of 40 US
+production markets prices a fixed 6-person, 10-hour shoot day at
+[$1,440 in the cheapest market, Santa Fe, and $3,020 in the most expensive, Boston](https://giggster.com/guide/reports/film-shoot-costs-major-us-cities-2026/).
+That page is on screen in the demo video at the moment the figure is spoken, because a
+number is worth what its source is.
 
 Dailies watches a take for **1.6 cents**, measured on real footage through the same Vertex AI
 path the deployment runs, priced at [Google's published rates](https://ai.google.dev/gemini-api/docs/pricing).
