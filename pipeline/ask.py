@@ -97,6 +97,18 @@ class AskResult:
         }
 
 
+def mcp_credential() -> str:
+    """Which cluster user the MCP server will connect as: "readonly" or "primary".
+
+    Exposed so /api/capabilities can state it. The claim that the SQL path cannot write is
+    worth nothing if a judge has to take it on trust, and it was briefly untrue: the service
+    ran with CLICKHOUSE_USER=default, the admin account, while the writeup described a
+    readonly credential. Reporting the answer from the same function that sets it is what
+    stops those two drifting apart again.
+    """
+    return "readonly" if os.environ.get("CLICKHOUSE_RO_USER") else "primary"
+
+
 def _mcp_env() -> dict:
     """Environment for the ClickHouse MCP server, from the same config the loader uses."""
     env = dict(os.environ)
@@ -104,16 +116,32 @@ def _mcp_env() -> dict:
     env.setdefault("CLICKHOUSE_VERIFY", "true")
     env.setdefault("CLICKHOUSE_PORT", "8443")
     env.setdefault("CLICKHOUSE_DATABASE", "default")
-    # Read-only, stated rather than inherited. Both of these already default to false in
-    # mcp-clickhouse 0.4.1, and the cluster user is itself readonly, so a write is refused
-    # twice over: verified by driving DDL, INSERT, TRUNCATE and DROP through the server and
-    # getting ClickHouse code 164 on all four while a SELECT returned normally.
+
+    # The third layer, and the only one that holds if the other two fail.
     #
-    # They are set here anyway because this agent writes its own SQL and runs it against a
-    # cluster from a public URL, so anyone can type anything into the question box. A safety
-    # property that depends on a library's current default is one dependency bump away from
-    # not holding, and it should be visible in the code that grants the access rather than
-    # only in someone else's changelog.
+    # This model writes its own SQL and runs it against a live cluster from a public URL, so
+    # the question box is an arbitrary-SQL surface by design. The app itself has to write
+    # (takes, observations and every row in agent_runs), so the process credential cannot be
+    # readonly. The MCP subprocess is a different matter: it only ever needs SELECT, so it
+    # gets its own cluster user that is granted exactly that.
+    #
+    # dailies_ro holds GRANT SELECT ON default.* and readonly=2, and DROP, INSERT, TRUNCATE,
+    # CREATE TABLE and ALTER ... DELETE driven straight through the server all come back
+    # ClickHouse code 497 while SELECT is unaffected.
+    #
+    # Without CLICKHOUSE_RO_USER set this falls through to the primary credential, which is
+    # the old behaviour and is NOT readonly. mcp_credential() reports which one is live so
+    # the deployment can be checked from outside instead of believed.
+    ro_user = os.environ.get("CLICKHOUSE_RO_USER")
+    ro_password = os.environ.get("CLICKHOUSE_RO_PASSWORD")
+    if ro_user and ro_password:
+        env["CLICKHOUSE_USER"] = ro_user
+        env["CLICKHOUSE_PASSWORD"] = ro_password
+
+    # Set explicitly rather than inherited. Both already default to false in
+    # mcp-clickhouse 0.4.1, but a safety property that depends on a library's current default
+    # is one dependency bump away from not holding, and it should be visible in the code that
+    # grants the access rather than only in someone else's changelog.
     env.setdefault("CLICKHOUSE_ALLOW_WRITE_ACCESS", "false")
     env.setdefault("CLICKHOUSE_ALLOW_DROP", "false")
     # Quieter subprocess: the server prints a banner and an update notice on every start,

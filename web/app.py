@@ -365,9 +365,16 @@ def capabilities():
         or os.environ.get("GOOGLE_API_KEY")
         or os.environ.get("GEMINI_API_KEY")
     )
+    from pipeline.ask import mcp_credential
+
     return {
         "ask": bool(model_ready and os.environ.get("CLICKHOUSE_HOST")),
         "model": describe(),
+        "store": STORE_BACKEND,
+        # "readonly" means the SQL the model writes runs as a cluster user granted SELECT and
+        # nothing else. Reported rather than asserted in prose, so the claim in the writeup
+        # can be checked against the running service without a credential.
+        "sql_credential": mcp_credential(),
     }
 
 

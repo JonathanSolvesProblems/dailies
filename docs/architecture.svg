@@ -1,0 +1,161 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" font-family="Segoe UI, Inter, Helvetica Neue, Arial, sans-serif">
+  <defs>
+    <!-- The black Ray-Ban Meta Wayfarer. Drawn once, placed twice: once as the
+         capture device, once as the ear the verdict comes back to. -->
+    <g id="glasses">
+      <path d="M4 10 h52 a8 8 0 0 1 8 8 v14 a16 16 0 0 1 -16 16 h-24 a16 16 0 0 1 -16 -16 v-14 a8 8 0 0 1 8 -8 z"
+            fill="#101317"/>
+      <path d="M84 10 h52 a8 8 0 0 1 8 8 v14 a16 16 0 0 1 -16 16 h-24 a16 16 0 0 1 -16 -16 v-14 a8 8 0 0 1 8 -8 z"
+            fill="#101317"/>
+      <rect x="62" y="16" width="24" height="7" rx="3.5" fill="#101317"/>
+      <rect x="0" y="12" width="8" height="9" rx="3" fill="#101317"/>
+      <rect x="140" y="12" width="8" height="9" rx="3" fill="#101317"/>
+      <!-- capture camera and the LED that cannot be switched off -->
+      <circle cx="17" cy="22" r="4.6" fill="#2A3038"/>
+      <circle cx="17" cy="22" r="2.1" fill="#5A6570"/>
+      <circle cx="131" cy="22" r="3.2" fill="#E8564B"/>
+    </g>
+
+    <marker id="ar" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1 1 L11 6 L1 11 z" fill="#5D6A73"/>
+    </marker>
+    <marker id="arG" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1 1 L11 6 L1 11 z" fill="#2FBF84"/>
+    </marker>
+    <marker id="arA" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1 1 L11 6 L1 11 z" fill="#E0A33E"/>
+    </marker>
+  </defs>
+
+  <rect width="1920" height="1080" fill="#1C2024"/>
+
+  <!-- ================= header ================= -->
+  <text x="96" y="92" fill="#ECEFF1" font-size="46" font-weight="700" letter-spacing="7">DAILIES</text>
+  <rect x="96" y="108" width="74" height="4" fill="#2FBF84"/>
+  <text x="96" y="150" fill="#8A9399" font-size="25">Continuity records, written while you shoot</text>
+
+  <text x="1824" y="92" fill="#8A9399" font-size="21" text-anchor="end">Every arrow below runs in the deployed service.</text>
+  <text x="1824" y="124" fill="#8A9399" font-size="21" text-anchor="end">Nothing in this diagram is planned work.</text>
+
+  <line x1="96" y1="196" x2="1824" y2="196" stroke="#2C333A" stroke-width="2"/>
+
+  <!-- ================= 1. CAPTURE ================= -->
+  <text x="96" y="248" fill="#5D6A73" font-size="18" letter-spacing="3.5">1 &#160;&#160;CAPTURE</text>
+
+  <!-- hardware chip: black glasses need a light plate to read on a dark board -->
+  <rect x="96" y="272" width="368" height="196" rx="16" fill="#E9ECEF"/>
+  <g transform="translate(150 306) scale(1.34)"><use href="#glasses"/></g>
+  <text x="120" y="416" fill="#15181C" font-size="25" font-weight="700">Ray-Ban Meta Gen 2</text>
+  <text x="120" y="446" fill="#5A6570" font-size="19">Camera and open-ear speakers, worn</text>
+
+  <rect x="96" y="492" width="368" height="120" rx="14" fill="#232930" stroke="#333B43" stroke-width="2"/>
+  <text x="120" y="530" fill="#ECEFF1" font-size="22" font-weight="600">Kotlin app on the glasses link</text>
+  <text x="120" y="562" fill="#8A9399" font-size="18">Meta Wearables Device Access Toolkit</text>
+  <text x="120" y="590" fill="#8A9399" font-size="18">Jetpack Compose, foreground service</text>
+
+  <rect x="96" y="636" width="368" height="106" rx="14" fill="#232930" stroke="#333B43" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="120" y="674" fill="#ECEFF1" font-size="22" font-weight="600">Or any webcam, in a browser</text>
+  <text x="120" y="704" fill="#8A9399" font-size="18">/live runs the same loop with no</text>
+  <text x="120" y="728" fill="#8A9399" font-size="18">hardware, so a judge can test it</text>
+
+  <!-- ================= 2. SERVICE ================= -->
+  <text x="588" y="248" fill="#5D6A73" font-size="18" letter-spacing="3.5">2 &#160;&#160;SERVICE</text>
+
+  <rect x="588" y="272" width="330" height="470" rx="16" fill="#232930" stroke="#3A434C" stroke-width="2"/>
+  <text x="612" y="316" fill="#ECEFF1" font-size="24" font-weight="700">Cloud Run</text>
+  <text x="612" y="346" fill="#8A9399" font-size="18">FastAPI, us-east1</text>
+
+  <line x1="612" y1="372" x2="894" y2="372" stroke="#2C333A" stroke-width="2"/>
+
+  <text x="612" y="410" fill="#2FBF84" font-size="18" font-weight="600">extract</text>
+  <text x="612" y="436" fill="#8A9399" font-size="17">every object in the take</text>
+
+  <text x="612" y="480" fill="#2FBF84" font-size="18" font-weight="600">reconcile</text>
+  <text x="612" y="506" fill="#8A9399" font-size="17">one vocabulary across takes</text>
+
+  <text x="612" y="550" fill="#2FBF84" font-size="18" font-weight="600">roll</text>
+  <text x="612" y="576" fill="#8A9399" font-size="17">frame against the reference</text>
+
+  <text x="612" y="620" fill="#2FBF84" font-size="18" font-weight="600">ask</text>
+  <text x="612" y="646" fill="#8A9399" font-size="17">plain English to SQL</text>
+
+  <text x="612" y="700" fill="#5D6A73" font-size="16">Every call is timed and written to</text>
+  <text x="612" y="722" fill="#5D6A73" font-size="16">agent_runs before it returns.</text>
+
+  <!-- ================= 3. MODEL ================= -->
+  <text x="1042" y="248" fill="#5D6A73" font-size="18" letter-spacing="3.5">3 &#160;&#160;MODEL</text>
+
+  <rect x="1042" y="272" width="358" height="204" rx="16" fill="#232930" stroke="#3A434C" stroke-width="2"/>
+  <circle cx="1086" cy="322" r="15" fill="none" stroke="#4285F4" stroke-width="3.5"/>
+  <circle cx="1086" cy="322" r="6" fill="#4285F4"/>
+  <text x="1116" y="330" fill="#ECEFF1" font-size="24" font-weight="700">Gemini on Vertex AI</text>
+  <text x="1066" y="372" fill="#8A9399" font-size="18">3.6-flash to extract, reconcile and ask</text>
+  <text x="1066" y="400" fill="#8A9399" font-size="18">3.5-flash to roll, because it is faster</text>
+  <text x="1066" y="428" fill="#8A9399" font-size="18">google-genai, ADC, location global</text>
+  <text x="1066" y="462" fill="#5D6A73" font-size="17">Never invents a number the rows do not hold.</text>
+
+  <rect x="1042" y="512" width="358" height="176" rx="16" fill="#232930" stroke="#3A434C" stroke-width="2"/>
+  <text x="1066" y="556" fill="#ECEFF1" font-size="23" font-weight="700">mcp-clickhouse</text>
+  <text x="1066" y="586" fill="#8A9399" font-size="18">The official MCP server, called as a</text>
+  <text x="1066" y="610" fill="#8A9399" font-size="18">tool in an explicit tool-calling loop.</text>
+  <text x="1066" y="648" fill="#E0A33E" font-size="17">write and drop flags off</text>
+  <text x="1066" y="672" fill="#E0A33E" font-size="17">readonly credential underneath</text>
+
+  <!-- ================= 4. STORE ================= -->
+  <text x="1520" y="248" fill="#5D6A73" font-size="18" letter-spacing="3.5">4 &#160;&#160;STORE</text>
+
+  <rect x="1520" y="272" width="304" height="416" rx="16" fill="#232930" stroke="#F5C24A" stroke-width="2"/>
+  <g transform="translate(1548 300)">
+    <rect x="0" y="0" width="11" height="42" rx="2" fill="#F5C24A"/>
+    <rect x="16" y="0" width="11" height="42" rx="2" fill="#F5C24A"/>
+    <rect x="32" y="0" width="11" height="42" rx="2" fill="#F5C24A"/>
+    <rect x="48" y="0" width="11" height="42" rx="2" fill="#F5C24A"/>
+    <rect x="0" y="18" width="59" height="8" rx="2" fill="#E8564B"/>
+  </g>
+  <text x="1548" y="392" fill="#ECEFF1" font-size="24" font-weight="700">ClickHouse Cloud</text>
+  <text x="1548" y="422" fill="#8A9399" font-size="18">Behind every read path</text>
+
+  <line x1="1548" y1="448" x2="1796" y2="448" stroke="#2C333A" stroke-width="2"/>
+
+  <text x="1548" y="486" fill="#ECEFF1" font-size="19">takes</text>
+  <text x="1548" y="522" fill="#ECEFF1" font-size="19">observations</text>
+  <text x="1548" y="558" fill="#ECEFF1" font-size="19">agent_runs</text>
+  <text x="1548" y="584" fill="#5D6A73" font-size="16">model, latency, outcome, fallback</text>
+  <text x="1548" y="626" fill="#5D6A73" font-size="16">Findings are not a table. They are</text>
+  <text x="1548" y="648" fill="#5D6A73" font-size="16">derived from observations on read,</text>
+  <text x="1548" y="670" fill="#5D6A73" font-size="16">so the rows cannot disagree.</text>
+
+  <!-- ================= arrows ================= -->
+  <!-- glasses -> app -->
+  <path d="M280 468 L280 492" stroke="#5D6A73" stroke-width="2.5" marker-end="url(#ar)"/>
+  <!-- app -> service -->
+  <path d="M464 552 L588 476" stroke="#5D6A73" stroke-width="2.5" marker-end="url(#ar)" fill="none"/>
+  <!-- browser -> service -->
+  <path d="M464 688 L588 560" stroke="#5D6A73" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#ar)" fill="none"/>
+  <text x="474" y="512" fill="#5D6A73" font-size="16">frames</text>
+
+  <!-- service <-> model -->
+  <path d="M918 400 L1042 374" stroke="#2FBF84" stroke-width="2.5" marker-end="url(#arG)" fill="none"/>
+  <!-- model -> mcp -->
+  <path d="M1221 476 L1221 512" stroke="#2FBF84" stroke-width="2.5" marker-end="url(#arG)"/>
+  <!-- mcp -> clickhouse -->
+  <path d="M1400 570 L1520 522" stroke="#E0A33E" stroke-width="2.5" marker-end="url(#arA)" fill="none"/>
+  <rect x="1404" y="592" width="112" height="26" rx="4" fill="#1C2024"/>
+  <text x="1408" y="612" fill="#E0A33E" font-size="16">SELECT only</text>
+  <!-- service -> clickhouse (direct writes/reads) -->
+  <path d="M918 660 C 1170 800, 1400 800, 1636 700" stroke="#F5C24A" stroke-width="2.5" marker-end="url(#arA)" fill="none"/>
+  <rect x="1044" y="756" width="428" height="30" rx="4" fill="#1C2024"/>
+  <text x="1052" y="779" fill="#8A9399" font-size="17">every take, every observation, every run</text>
+
+  <!-- ================= return path ================= -->
+  <rect x="96" y="836" width="1728" height="128" rx="16" fill="#1F2429" stroke="#2FBF84" stroke-width="2"/>
+  <g transform="translate(140 866) scale(0.78)"><use href="#glasses"/></g>
+  <path d="M300 900 L360 900" stroke="#2FBF84" stroke-width="2.5" marker-start="url(#arG)" fill="none"/>
+  <text x="380" y="890" fill="#ECEFF1" font-size="24" font-weight="600">The verdict comes back the way it left, spoken into the wearer&#8217;s ear.</text>
+  <text x="380" y="928" fill="#8A9399" font-size="20">4.4 s median on the deployed service. A script supervisor is watching the scene, not a screen.</text>
+  <text x="1800" y="908" fill="#2FBF84" font-size="30" font-weight="700" text-anchor="end">4.4s</text>
+
+  <!-- ================= footer ================= -->
+  <text x="96" y="1020" fill="#5D6A73" font-size="18">dailies-564641829203.us-east1.run.app</text>
+  <text x="1824" y="1020" fill="#5D6A73" font-size="18" text-anchor="end">1.6&#162; a take &#183; 63&#162; a 40-take shoot day</text>
+</svg>
