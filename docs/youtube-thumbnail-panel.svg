@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1360" height="1080" viewBox="0 0 1360 1080"
+     font-family="Segoe UI, Inter, Helvetica Neue, Arial, sans-serif">
+  <rect width="1360" height="1080" fill="#14171A"/>
+
+  <!-- The 16:9 sibling of docs/thumbnail-panel.svg, for the YouTube custom thumbnail.
+       Re-laid out at these proportions rather than cropped, because cropping the 3:2 panel
+       to 16:9 takes the verdict chip off the bottom, which is the half that shows the thing
+       working. A YouTube thumbnail is read at about 360px wide in a feed, so the same rule
+       applies: nothing under ~55px in the source survives. -->
+  <text x="88" y="176" fill="#2FBF84" font-size="50" font-weight="700" letter-spacing="4">RAY-BAN META &#183; GEMINI</text>
+
+  <text x="88" y="430" fill="#FFE500" font-size="236" font-weight="800" letter-spacing="-6">4.4s</text>
+
+  <text x="88" y="532" fill="#ECEFF1" font-size="66" font-weight="600">to catch what moved between takes,</text>
+  <text x="88" y="612" fill="#8A9399" font-size="66" font-weight="600">while the camera is still rolling</text>
+
+  <rect x="88" y="700" width="1184" height="208" rx="18" fill="#1C2024"/>
+  <rect x="88" y="700" width="9" height="208" rx="4" fill="#E8564B"/>
+  <text x="136" y="770" fill="#E8564B" font-size="56" font-weight="700">OFF THE MARK</text>
+  <text x="136" y="844" fill="#8A9399" font-size="50">coffee mug</text>
+  <text x="400" y="844" fill="#FFE500" font-size="50" font-weight="700">right</text>
+  <text x="520" y="844" fill="#5D6A73" font-size="50">&#8594;</text>
+  <text x="584" y="844" fill="#FFE500" font-size="50" font-weight="700">left</text>
+  <text x="136" y="894" fill="#5D6A73" font-size="42">nobody told it to look for a mug</text>
+
+  <text x="88" y="1010" fill="#5D6A73" font-size="44">Dailies &#183; open source</text>
+</svg>

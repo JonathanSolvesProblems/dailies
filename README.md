@@ -11,7 +11,7 @@ paperwork already written.**
 
 Built for [Agentic Cinema](https://agentic-cinema.devpost.com/), ClickHouse track.
 
-[![Watch the demo](https://i.ytimg.com/vi/BOka9As4lVE/maxresdefault.jpg)](https://www.youtube.com/watch?v=BOka9As4lVE)
+[![Watch the demo: 4.4 seconds to catch what moved between takes, while the camera is still rolling](docs/youtube-thumbnail.png)](https://www.youtube.com/watch?v=BOka9As4lVE)
 
 Every shot in it is the deployed service running on real footage. The catch is at
 [0:49](https://www.youtube.com/watch?v=BOka9As4lVE&t=49s).
