@@ -7,6 +7,11 @@ Live: **https://dailies-564641829203.us-east1.run.app**
 
 Built for [Agentic Cinema](https://agentic-cinema.devpost.com/), ClickHouse track.
 
+![How Dailies fits together: Ray-Ban Meta glasses to Cloud Run to Gemini on Vertex AI to
+ClickHouse Cloud, with the verdict spoken back into the wearer's ear](docs/architecture.png)
+
+Every arrow in that diagram runs in the deployed service. Nothing in it is planned work.
+
 ---
 
 ## The problem

@@ -36,6 +36,14 @@ __pycache__/
 *.png
 *.heic
 
+# docs/ is the one exception, and it is a narrow one: diagrams rendered from the .svg
+# checked in beside them. No camera ever produced these, so the "real home, real people"
+# reason for the blanket rule does not apply. This works because docs/ is not itself an
+# excluded directory; a negation inside an excluded directory would be silently ignored,
+# which is the trap broll/ hit.
+!docs/*.png
+!docs/*.svg
+
 # Editors / OS
 .vscode/
 .idea/
