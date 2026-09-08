@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1200" viewBox="0 0 1080 1200"
+     font-family="Segoe UI, Inter, Helvetica Neue, Arial, sans-serif">
+  <rect width="1080" height="1200" fill="#14171A"/>
+
+  <!-- Sized for a gallery card, where this whole image renders about 300px wide. At that
+       scale the source divides by six, so nothing under ~55px survives and the hero has to be
+       enormous. Three elements only: who it runs on, the number, and proof it fired. -->
+  <text x="80" y="180" fill="#2FBF84" font-size="52" font-weight="700" letter-spacing="4">RAY-BAN META &#183; GEMINI</text>
+
+  <text x="80" y="452" fill="#FFE500" font-size="250" font-weight="800" letter-spacing="-6">4.4s</text>
+
+  <text x="80" y="556" fill="#ECEFF1" font-size="68" font-weight="600">to catch what moved</text>
+  <text x="80" y="638" fill="#ECEFF1" font-size="68" font-weight="600">between takes,</text>
+  <text x="80" y="720" fill="#8A9399" font-size="68" font-weight="600">while the camera</text>
+  <text x="80" y="802" fill="#8A9399" font-size="68" font-weight="600">is still rolling</text>
+
+  <!-- The verdict as the service actually printed it, so the card shows the thing working
+       rather than only describing it. -->
+  <rect x="80" y="892" width="920" height="216" rx="18" fill="#1C2024"/>
+  <rect x="80" y="892" width="9" height="216" rx="4" fill="#E8564B"/>
+  <text x="128" y="962" fill="#E8564B" font-size="56" font-weight="700">OFF THE MARK</text>
+  <text x="128" y="1036" fill="#8A9399" font-size="50">coffee mug</text>
+  <text x="392" y="1036" fill="#FFE500" font-size="50" font-weight="700">right</text>
+  <text x="512" y="1036" fill="#5D6A73" font-size="50">&#8594;</text>
+  <text x="576" y="1036" fill="#FFE500" font-size="50" font-weight="700">left</text>
+  <text x="128" y="1088" fill="#5D6A73" font-size="42">nobody told it to look for a mug</text>
+</svg>
