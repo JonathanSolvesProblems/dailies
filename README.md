@@ -1,11 +1,17 @@
 # Dailies
 
+> **Archived.** Built for Agentic Cinema (Google Cloud, July to September 2026). The
+> hackathon is over, the hosted demo was shut down on 2026-10-16, and this repository is
+> no longer maintained. The demo video shows the
+> deployed service working, and the app still runs locally with no credentials (see
+> [Run it](#run-it)).
+
 **A camera assistant wears smart glasses through a shoot and walks off set with the
 paperwork already written.**
 
 **Demo: [2 min 31 s on YouTube](https://www.youtube.com/watch?v=BOka9As4lVE)**
 
-**Live: [dailies-564641829203.us-east1.run.app](https://dailies-564641829203.us-east1.run.app)**, and it runs from any webcam, so it can be tried without the glasses.
+**Live:** retired on 2026-10-16 when the hackathon ended. It ran from any webcam, so it could be tried without the glasses, and it still does [locally](#locally).
 
 **Write-up: [how I built it, and what the hardware forced](https://jonathanandrei.com/blog/dailies-smart-glasses-continuity-clickhouse-agentic-cinema/)**
 
@@ -332,8 +338,8 @@ not evidence.
 
 ### Hosted
 
-**https://dailies-564641829203.us-east1.run.app**: no setup, no glasses, no key.
-Add `?theme=light` for the light palette.
+Retired on 2026-10-16. It ran at `dailies-564641829203.us-east1.run.app` during judging,
+with no setup, no glasses and no key. Run it locally instead, below.
 
 ### Locally
 
@@ -401,7 +407,8 @@ script that has to be run by hand.
 | ClickHouse | [`pipeline/telemetry.py`](pipeline/telemetry.py) | `INSERT INTO agent_runs`, on every model call the system makes |
 | ClickHouse | [`pipeline/load_clickhouse.py`](pipeline/load_clickhouse.py) | ingest, and the file that rebuilt the table after I dropped it |
 
-Or check the running service instead of the code:
+While it was deployed, the running service could be checked instead of the code. These are
+the responses it gave during judging; the service no longer exists.
 
 ```
 curl https://dailies-564641829203.us-east1.run.app/api/health
